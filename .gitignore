@@ -40,3 +40,7 @@ desktop.ini
 *.bak
 *.tmp
 ~$*
+
+# ---- documentos locais (não versionados por decisão do time) ----
+docs/
+lib/LEIA-ME.md

@@ -10,7 +10,6 @@ MVP de dashboard de vacinação sobre o banco **`bd_vacinas_ubs`**.
 | Dependência externa | apenas o driver MySQL Connector/J **9.7.0** (`lib/`) |
 
 - **Preparar o ambiente (primeira vez):** este arquivo.
-- **Fluxo de trabalho do time (Git, branches, convenções):** [`docs/DESENVOLVIMENTO.md`](docs/DESENVOLVIMENTO.md).
 
 ## Estrutura atual
 
@@ -20,8 +19,7 @@ HEALTH-SEC/
 ├── db/00_usuario_app.sql.example   cria o usuário da aplicação (copie e ponha sua senha)
 ├── db/criacao_tabelas.sql          script 1: banco, 12 tabelas, 7 triggers
 ├── db/insercao_tabelas.sql         script 2: dados de teste (reexecutável)
-├── docs/DESENVOLVIMENTO.md         guia do time
-└── lib/LEIA-ME.md                  como baixar o driver JDBC
+└── lib/                            driver JDBC (local, não versionado; crie a pasta, veja o passo 6)
 ```
 
 ---
@@ -147,8 +145,13 @@ Copy-Item config\app.properties.example config\app.properties
 notepad config\app.properties     # troque TROQUE_PELA_SUA_SENHA_LOCAL pela senha do passo 3
 ```
 
-Baixe o driver **Connector/J 9.7.0** conforme [`lib/LEIA-ME.md`](lib/LEIA-ME.md) e deixe **só o `.jar`** em `lib\`
-(não extraia o zip inteiro dentro de `lib\`).
+Baixe o driver **Connector/J 9.7.0** e deixe **só o `.jar`** em `lib\` (crie a pasta se não existir: `mkdir lib`):
+
+- oficial: https://downloads.mysql.com/archives/c-j/ → *Product Version* **9.7.0** · *Operating System* **Platform Independent** → ZIP;
+  extraia **fora do projeto** e copie só o `mysql-connector-j-9.7.0.jar`;
+- ou o `.jar` direto: https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/9.7.0/mysql-connector-j-9.7.0.jar
+
+> ⚠️ Não use a versão da página principal de downloads (26.x): ela só suporta MySQL 8.4+, e o projeto usa 8.0.
 
 **Verificar:**
 
