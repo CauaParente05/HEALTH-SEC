@@ -1,0 +1,6 @@
+# Copie este arquivo para config/app.properties e coloque SUA senha local.
+# config/app.properties esta no .gitignore: ele NUNCA vai para o Git.
+db.url=jdbc:mysql://127.0.0.1:3306/bd_vacinas_ubs?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Recife&characterEncoding=UTF-8
+db.user=ubs_vacinas_app
+db.password=TROQUE_PELA_SUA_SENHA_LOCAL
+server.port=8080

@@ -1,0 +1,20 @@
+-- ============================================================================
+-- Usuário da aplicação (JDBC). Rodar como root. Pode rodar quantas vezes quiser.
+-- 1. Copie para db/00_usuario_app.sql (arquivo ignorado pelo Git).
+-- 2. Troque as DUAS ocorrências de <SENHA> pela sua senha local
+--    (a mesma do config/app.properties). Evite na senha: $  \  #  aspas.
+-- ============================================================================
+CREATE DATABASE IF NOT EXISTS bd_vacinas_ubs
+    DEFAULT CHARACTER SET utf8mb4
+    DEFAULT COLLATE utf8mb4_0900_ai_ci;
+
+-- Cria o usuário se ainda não existir...
+CREATE USER IF NOT EXISTS 'ubs_vacinas_app'@'localhost' IDENTIFIED BY '<SENHA>';
+-- ...e SEMPRE (re)define a senha: o CREATE USER IF NOT EXISTS não troca a senha
+-- de um usuário que já existe. Também serve para "esqueci a senha".
+ALTER USER 'ubs_vacinas_app'@'localhost' IDENTIFIED BY '<SENHA>';
+
+-- Somente DML no banco do projeto: a aplicação não cria nem apaga tabelas.
+GRANT SELECT, INSERT, UPDATE, DELETE ON bd_vacinas_ubs.* TO 'ubs_vacinas_app'@'localhost';
+
+SHOW GRANTS FOR 'ubs_vacinas_app'@'localhost';

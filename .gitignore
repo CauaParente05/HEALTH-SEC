@@ -1,0 +1,42 @@
+# =====================================================================
+# HEALTH-SEC · o que NUNCA vai para o Git
+# Conferir antes de todo commit:  git status
+# =====================================================================
+
+# ---- credenciais locais (cada dev tem as suas) ----
+config/app.properties
+db/00_usuario_app.sql
+.env
+*.env
+
+# ---- driver JDBC (cada dev baixa; veja lib/LEIA-ME.md) ----
+lib/*.jar
+lib/*/
+*.zip
+
+# ---- saída da compilação ----
+out/
+bin/
+*.class
+
+# ---- logs e travamentos da JVM ----
+*.log
+hs_err_pid*
+
+# ---- VSCode: só as configurações do time são versionadas ----
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# ---- outras IDEs ----
+.idea/
+*.iml
+
+# ---- sistema / temporários ----
+.DS_Store
+Thumbs.db
+desktop.ini
+*.bak
+*.tmp
+~$*
