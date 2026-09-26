@@ -9,7 +9,9 @@ MVP de dashboard de vacinação sobre o banco **`bd_vacinas_ubs`**.
 | Frontend | HTML + CSS + JavaScript vanilla, gráficos SVG desenhados à mão |
 | Dependência externa | apenas o driver MySQL Connector/J **9.7.0** (`lib/`) |
 
-- **Preparar o ambiente (primeira vez):** este arquivo.
+- **Preparar o ambiente (primeira vez):** passos 1 a 6 abaixo.
+- **Compilar e rodar:** [passo 7](#passo-7--compilar-e-rodar).
+- **Como o código está organizado e como acrescentar uma rota:** [seção própria](#como-o-código-está-organizado).
 
 ## Estrutura atual
 
@@ -19,7 +21,20 @@ HEALTH-SEC/
 ├── db/00_usuario_app.sql.example   cria o usuário da aplicação (copie e ponha sua senha)
 ├── db/criacao_tabelas.sql          script 1: banco, 12 tabelas, 7 triggers
 ├── db/insercao_tabelas.sql         script 2: dados de teste (reexecutável)
-└── lib/                            driver JDBC (local, não versionado; crie a pasta, veja o passo 6)
+├── lib/                            driver JDBC (local, não versionado; crie a pasta, veja o passo 6)
+├── scripts/                        build.bat (compila) e run.bat (sobe o servidor)
+├── src/br/cesar/vacinas/
+│   ├── App.java                    main: carrega a configuração, registra as rotas e sobe o servidor
+│   ├── config/AppConfig.java       lê config/app.properties (DB_PASSWORD do ambiente tem prioridade)
+│   ├── db/Database.java            conexão JDBC, query/update e transação (emTransacao)
+│   ├── db/SqlErros.java            traduz erros do MySQL (CHECK, FK, UNIQUE, triggers) para português
+│   ├── http/                       Router, Request, Json, StaticFiles, HttpError
+│   ├── api/Routes.java             todos os endpoints: MÉTODO + caminho -> método do DAO
+│   └── dao/                        *** todo o SQL da aplicação *** (um DAO por funcionalidade)
+└── web/                            front servido pelo próprio Java em http://localhost:8080
+    ├── index.html                  página única, uma <section> por aba
+    ├── css/style.css
+    └── js/                         api.js (fetch + erros), app.js (abas), charts.js, um .js por aba
 ```
 
 ---
@@ -164,6 +179,85 @@ git status --ignored --short   # app.properties, 00_usuario_app.sql e o .jar apa
 
 ---
 
+### Passo 7 · Compilar e rodar
+
+Sempre **da raiz do projeto**: o servidor procura `config/` e `web/` a partir dela.
+
+```powershell
+scripts\build.bat      # compila (equivale a: javac -encoding UTF-8 -d out -sourcepath src src\br\cesar\vacinas\App.java)
+scripts\run.bat        # sobe o servidor (equivale a: java -cp "out;lib/*" br.cesar.vacinas.App)
+```
+
+O terminal mostra `Sala de Vacina no ar: http://localhost:8080` e fica parado: é o servidor rodando.
+Para testar a API, abra **outro terminal**. Para parar o servidor, **Ctrl+C**.
+
+**Verificar:**
+
+```powershell
+curl.exe http://localhost:8080/api/health   # {"versao":"8.0.x","banco":"bd_vacinas_ubs"}
+```
+
+E `http://localhost:8080` no navegador abre a página com as abas.
+
+- No PowerShell use `curl.exe`: o `curl` sozinho é outro comando no PowerShell 5.
+- Mudou só `web/`? Basta recarregar o navegador (Ctrl+F5). Mudou `.java`? Rode `scripts\build.bat` e reinicie o servidor.
+- Compilação "do zero" (antes de abrir PR): `Remove-Item out -Recurse` e depois `scripts\build.bat`.
+
+---
+
+## Como o código está organizado
+
+Toda requisição segue o mesmo caminho:
+
+```
+navegador (web/js/api.js)  ->  App (HttpServer em 127.0.0.1:8080)
+   /api/...  ->  Router -> handler registrado em Routes -> DAO -> Database (JDBC) -> MySQL
+   resto     ->  StaticFiles (arquivos de web/)
+resposta: sempre JSON UTF-8; erro = {"erro": "mensagem"} com status 400, 404, 409 ou 500
+```
+
+- O front envia **formulário** (`chave=valor`, via `URLSearchParams`), não JSON; o Java só escreve JSON.
+- Todo SQL fica nos DAOs, escrito à mão, sempre com `PreparedStatement` e `?`.
+- Quem valida é o banco (CHECK, FK, triggers). O `SqlErros` só traduz a mensagem; o `api.js` mostra num aviso vermelho.
+
+### Acrescentar uma funcionalidade (3 passos)
+
+1. **SQL no DAO** (`src/br/cesar/vacinas/dao/`): um método por comando.
+   ```java
+   public static List<Map<String, Object>> listar(String cnes) throws SQLException {
+       return Database.query("SELECT * FROM Estoque_UBS WHERE (? IS NULL OR cnes = ?)", cnes, cnes);
+   }
+   ```
+2. **Rota** no **seu bloco** de `api/Routes.java` (acrescente; não reorganize os blocos dos colegas):
+   ```java
+   r.get("/api/estoque", req -> EstoqueDao.listar(req.str("cnes")));
+   ```
+3. **Tela** no JS da sua aba (`web/js/<aba>.js`):
+   ```js
+   const linhas = await api.get('/api/estoque');
+   document.getElementById('aba-estoque').innerHTML = ui.tabela(linhas);
+   ```
+
+Regras rápidas:
+
+| Preciso de... | Use |
+|---|---|
+| campo obrigatório / opcional | `req.reqStr("x")`, `req.reqInt("x")` (respondem 400 sozinhos) / `req.str("x")` (vazio vira `NULL`) |
+| variável no caminho, ex. `/api/pacientes/{cns}` | `req.path("cns")` |
+| vários comandos que gravam juntos | `Database.emTransacao(conn -> { Database.update(conn, ...); ...; return null; })` |
+| registro não encontrado | `throw new HttpError(404, "...")` (erro do banco não precisa de try/catch) |
+| texto do banco dentro do HTML | `ui.esc(valor)` ou `ui.tabela(linhas)` |
+
+## Endpoints
+
+| Método | Caminho | Resposta |
+|---|---|---|
+| GET | `/api/health` | versão do MySQL e nome do banco (teste de conexão) |
+
+Cada rota nova entra nesta tabela no mesmo PR.
+
+---
+
 ## Problemas comuns
 
 | Sintoma | Causa provável / solução |
@@ -175,5 +269,10 @@ git status --ignored --short   # app.properties, 00_usuario_app.sql e o .jar apa
 | `Communications link failure` / `Can't connect` | serviço `MySQL80` parado; use sempre `127.0.0.1` (não `localhost`) |
 | `No suitable driver found for jdbc:mysql` | falta o `.jar` em `lib\` ou o classpath não inclui `lib/*` |
 | Números do dashboard diferentes entre devs | as consultas usam `CURDATE()`; os dados de teste têm referência 20/09/2026 |
+| `NoSuchFileException: config\app.properties` ou página 404 em `/` | servidor iniciado fora da raiz do projeto: `cd` para a pasta HEALTH-SEC e rode de novo |
+| `Address already in use` | a porta 8080 já está em uso (outro servidor aberto): feche-o ou mude `server.port` no **seu** `app.properties` |
+| `cannot find symbol: Map` ao compilar | falta `import java.util.Map;` no topo do arquivo (o VSCode pode apagá-lo em "Organize Imports") |
+| Acentos como `├ú` no terminal | só exibição do PowerShell: rode `chcp 65001`; no navegador não acontece |
+| Console do navegador não deixa colar código | digite `allow pasting` (ou `permitir colar`) e Enter |
 
 > ⚠️ **DBeaver:** para sair, use **Desconectar**. **Excluir** com o banco selecionado apaga o banco inteiro.
