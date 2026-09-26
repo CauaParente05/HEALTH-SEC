@@ -21,6 +21,8 @@ HEALTH-SEC/
 ├── db/00_usuario_app.sql.example   cria o usuário da aplicação (copie e ponha sua senha)
 ├── db/criacao_tabelas.sql          script 1: banco, 12 tabelas, 7 triggers
 ├── db/insercao_tabelas.sql         script 2: dados de teste (reexecutável)
+├── db/consultas.sql                as 10 consultas do minimundo (mesmo SQL do ConsultaDao)
+├── docs/DESENVOLVIMENTO.md         fluxo de trabalho em equipe (branches, PR, mudanças no banco)
 ├── lib/                            driver JDBC (local, não versionado; crie a pasta, veja o passo 6)
 ├── scripts/                        build.bat (compila) e run.bat (sobe o servidor)
 ├── src/br/cesar/vacinas/
@@ -31,10 +33,16 @@ HEALTH-SEC/
 │   ├── http/                       Router, Request, Json, StaticFiles, HttpError
 │   ├── api/Routes.java             todos os endpoints: MÉTODO + caminho -> método do DAO
 │   └── dao/                        *** todo o SQL da aplicação *** (um DAO por funcionalidade)
+│       └── ConsultaDao.java        as 10 consultas do minimundo (aba Consultas)
 └── web/                            front servido pelo próprio Java em http://localhost:8080
     ├── index.html                  página única, uma <section> por aba
     ├── css/style.css
-    └── js/                         api.js (fetch + erros), app.js (abas), charts.js, um .js por aba
+    └── js/
+        ├── api.js                  fetch, tratamento de erros e utilitários de tela (ui)
+        ├── app.js                  troca de abas
+        ├── charts.js               gráficos SVG
+        ├── consultas.js            aba Consultas: seletor, SQL e tabela de resultado
+        └── dashboard.js, pacientes.js, estoque.js   uma aba cada
 ```
 
 ---
@@ -258,6 +266,10 @@ Regras rápidas:
 | GET | `/api/dashboard/estatistica/doses-por-mes?cnes=` | doses aplicadas por mês nos últimos 24 meses: `{primeiro, ultimo, meses: [{mes, doses}]}` |
 | GET | `/api/dashboard/estatistica/situacao-doses?cnes=` | doses por situação (APLICADA, PENDENTE, ATRASADA, CANCELADA): `[{situacao, doses, percentual}]` |
 | GET | `/api/dashboard/estatistica/idade-pacientes?cnes=` | histograma da idade (classes de 10 anos) e medidas resumo: `{classes: [{inicio, pacientes}], resumo: {n, media, desvio_padrao, minimo, maximo, mediana}}` |
+| GET | `/api/consultas` | as 10 consultas: id, título, pergunta, recursos, SQL e parâmetro |
+| GET | `/api/consultas/{n}` | `{"colunas": [...], "linhas": [[...], ...]}`; a 3 exige `?cns=` (15 dígitos) e a 6 exige `?id_lote=` |
+| GET | `/api/pacientes` | `[{cns, nome}]` para o select da consulta 3 |
+| GET | `/api/lotes` | `[{id_lote, numero_lote, fabricante}]` para o select da consulta 6 |
 
 Nas rotas de estatística, `cnes` é opcional (vazio = todas as UBS) e filtra pela UBS de referência do paciente.
 
