@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sala de Vacina · UBS</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <h1>Sala de Vacina</h1>
+    <nav>
+      <button data-aba="dashboard">Dashboard</button>
+      <button data-aba="consultas">Consultas</button>
+      <button data-aba="pacientes">Pacientes</button>
+      <button data-aba="estoque">Estoque</button>
+    </nav>
+  </header>
+  <main>
+    <!-- ==== DASHBOARD (Cauã) ==== -->
+    <section id="aba-dashboard" class="aba"></section>
+    <!-- ==== CONSULTAS (João Arthur) ==== -->
+    <section id="aba-consultas" class="aba"></section>
+    <!-- ==== PACIENTES (Davila) ==== -->
+    <section id="aba-pacientes" class="aba"></section>
+    <!-- ==== ESTOQUE (João Pedro) ==== -->
+    <section id="aba-estoque" class="aba"></section>
+  </main>
+  <div id="toast"></div>
+
+  <script src="js/api.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/consultas.js"></script>
+  <script src="js/pacientes.js"></script>
+  <script src="js/estoque.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
