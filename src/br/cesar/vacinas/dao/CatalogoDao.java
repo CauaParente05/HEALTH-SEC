@@ -5,9 +5,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
-/** Listas curtas para preencher os selects da tela (só leitura). */
 public final class CatalogoDao {
-
     public List<Map<String, Object>> pacientes() throws SQLException {
         return Database.query("SELECT cns, nome FROM Paciente ORDER BY nome");
     }

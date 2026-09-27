@@ -47,7 +47,7 @@ SELECT v.nome AS vacina, u.nome AS ubs,
    Pergunta: Qual a carteira de vacinação completa de um paciente?
    Recursos: LEFT JOIN (doses pendentes não têm lote/profissional/UBS), parâmetro, ORDER BY
    --------------------------------------------------------------------------- */
-SET @cns = '107939763812637';   -- troque pelo CNS do paciente desejado
+SET @cns = '107939763812637';
 SELECT v.nome AS vacina, r.numero_dose AS dose, r.status,
        r.data_prevista, r.data_aplicacao,
        l.numero_lote AS lote, l.fabricante,

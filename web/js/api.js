@@ -1,10 +1,8 @@
-// Toda chamada ao backend passa por aqui: um único lugar trata os erros.
 const api = {
   async get(caminho, params = {}) {
     const qs = new URLSearchParams(limpar(params)).toString();
     return tratar(await fetch(caminho + (qs ? '?' + qs : '')));
   },
-  // Envia como formulário (chave=valor), não JSON: o Java lê com URLDecoder.
   async post(caminho, dados = {}) {
     return tratar(await fetch(caminho, { method: 'POST', body: new URLSearchParams(limpar(dados)) }));
   },
@@ -37,11 +35,9 @@ const ui = {
     clearTimeout(ui._timer);
     ui._timer = setTimeout(() => (t.className = ''), 4000);
   },
-  // Escapa texto vindo do banco antes de pôr no HTML.
   esc(v) {
     return String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   },
-  // Tabela genérica a partir de uma lista de objetos {coluna: valor}.
   tabela(linhas) {
     if (!linhas.length) return '<p class="vazio">Nenhum resultado.</p>';
     const cols = Object.keys(linhas[0]);

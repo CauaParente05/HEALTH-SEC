@@ -130,10 +130,9 @@ pre { background: #1c2430; color: #e8edf3; padding: 12px; border-radius: 8px; ov
 .consulta-mensagem.sucesso {
     background: #d1e7dd;
 }
-/* ==== DASHBOARD · ESTATÍSTICA (Cauã) ==== */
 :root {
-  --serie-1: #2a78d6; --serie-2: #eb6834;                 /* séries (identidade) */
-  --bom: #0ca30c; --critico: #d03b3b; --neutro: #a9a8a2;  /* situação da dose */
+  --serie-1: #2a78d6; --serie-2: #eb6834;
+  --bom: #0ca30c; --critico: #d03b3b; --neutro: #a9a8a2;
   --tinta-2: #52514e; --tinta-3: #898781; --grade: #e1e0d9;
 }
 .filtro-topo { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }

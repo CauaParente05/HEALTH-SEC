@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 
 public final class EstoqueDao {
-
     public List<Map<String, Object>> listar(String cnes) throws SQLException {
         return Database.query("""
             SELECT e.cnes,

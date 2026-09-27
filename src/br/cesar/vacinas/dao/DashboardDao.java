@@ -6,32 +6,15 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Dados do dashboard. Os métodos da seção "Estatística" alimentam os gráficos entregues
- * na disciplina de Estatística (E3).
- *
- * Filtro de UBS: cnes null = todas. Todos os gráficos filtram pela UBS de REFERÊNCIA do
- * paciente (Paciente.cnes), porque doses pendentes não têm UBS de aplicação.
- */
 public final class DashboardDao {
-
-    /** Trecho de WHERE do filtro de UBS; recebe o cnes duas vezes (ver comUbs). Os espaços nas pontas
-     *  são de propósito: o Java apaga o espaço final das linhas de um text block. */
     private static final String FILTRO_UBS = " (? IS NULL OR p.cnes = ?) ";
 
     private static Object[] comUbs(String cnes) { return new Object[] { cnes, cnes }; }
 
-    /** Lista do filtro de UBS do topo. */
     public List<Map<String, Object>> listarUbs() throws SQLException {
         return Database.query("SELECT cnes, nome FROM UBS ORDER BY nome");
     }
 
-    // ==== ESTATÍSTICA ====
-
-    /**
-     * Gráfico 1 · barras agrupadas. Doses aplicadas por faixa etária e sexo.
-     * Variáveis: faixa etária (qualitativa ordinal, idade NA DATA DA APLICAÇÃO) × sexo (nominal).
-     */
     public List<Map<String, Object>> dosesPorFaixaEtariaESexo(String cnes) throws SQLException {
         return Database.query("""
             SELECT CASE WHEN t.idade < 1  THEN 1
@@ -57,11 +40,6 @@ public final class DashboardDao {
              ORDER BY ordem, t.sexo""", comUbs(cnes));
     }
 
-    /**
-     * Gráfico 2 · linha. Doses aplicadas por mês nos últimos 24 meses (inclui o mês atual).
-     * Variável: contagem mensal (quantitativa discreta) ao longo do tempo. Meses sem dose não
-     * vêm do banco; o front completa com zero.
-     */
     public Map<String, Object> dosesPorMes(String cnes) throws SQLException {
         Map<String, Object> inicio = Database.queryUm("""
             SELECT DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 23 MONTH), '%Y-%m') AS primeiro,
@@ -80,11 +58,6 @@ public final class DashboardDao {
         return r;
     }
 
-    /**
-     * Gráfico 3 · barras horizontais. Distribuição das doses por situação.
-     * Variável: situação (qualitativa nominal). ATRASADA não é status gravado: é uma dose
-     * PENDENTE com data prevista já vencida.
-     */
     public List<Map<String, Object>> dosesPorSituacao(String cnes) throws SQLException {
         return Database.query("""
             SELECT t.situacao, COUNT(*) AS doses,
@@ -99,11 +72,6 @@ public final class DashboardDao {
              ORDER BY doses DESC""", comUbs(cnes));
     }
 
-    /**
-     * Gráfico 4 · histograma. Idade atual dos pacientes em classes de 10 anos, com as medidas
-     * resumo (média, mediana, desvio padrão amostral, mínimo e máximo).
-     * Variável: idade (quantitativa contínua).
-     */
     public Map<String, Object> idadePacientes(String cnes) throws SQLException {
         String idades = """
             SELECT TIMESTAMPDIFF(YEAR, p.data_nascimento, CURDATE()) AS idade
@@ -117,7 +85,6 @@ public final class DashboardDao {
              GROUP BY inicio
              ORDER BY inicio""", comUbs(cnes));
 
-        // Mediana: média dos 1 ou 2 valores do meio, numerados com ROW_NUMBER.
         Map<String, Object> resumo = Database.queryUm("""
             SELECT COUNT(*) AS n,
                    ROUND(AVG(i.idade), 1)         AS media,

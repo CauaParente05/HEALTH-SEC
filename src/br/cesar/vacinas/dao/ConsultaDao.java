@@ -7,19 +7,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * As 10 perguntas do minimundo (seção 1.3). O SQL é o mesmo de db/consultas.sql,
- * com "?" no lugar de @cns e @id_lote: ao mudar uma consulta, mude nos dois arquivos.
- */
 public final class ConsultaDao {
-
     public record Parametro(String nome, String rotulo, String exemplo) {}
 
     public record Consulta(int numero, String titulo, String pergunta, String recursos,
                            String sql, Parametro parametro) {}
 
     private static final List<Consulta> CONSULTAS = List.of(
-
         new Consulta(1, "Doses atrasadas por UBS",
             "Quais pacientes estão com doses atrasadas (data prevista vencida e status pendente), por UBS?",
             "INNER JOIN (4 tabelas), WHERE, ORDER BY, DATEDIFF",
@@ -199,7 +193,6 @@ public final class ConsultaDao {
             null)
     );
 
-    /** Metadados das 10 consultas para o seletor da tela (não executa nada). */
     public List<Map<String, Object>> listar() {
         List<Map<String, Object>> lista = new ArrayList<>();
         for (Consulta c : CONSULTAS) {
@@ -223,12 +216,10 @@ public final class ConsultaDao {
         return null;
     }
 
-    /** valor é o CNS (consulta 3) ou o id do lote (consulta 6); nas demais é ignorado. */
     public List<Map<String, Object>> executar(Consulta c, Object valor) throws SQLException {
         return c.parametro() == null ? Database.query(c.sql()) : Database.query(c.sql(), valor);
     }
 
-    /** Formato da tela de consultas: {colunas: [nomes], linhas: [[valores na ordem das colunas]]}. */
     public Map<String, Object> executarTabela(Consulta c, Object valor) throws SQLException {
         List<Map<String, Object>> resultado = executar(c, valor);
         List<String> colunas = resultado.isEmpty() ? List.of() : new ArrayList<>(resultado.get(0).keySet());
@@ -240,7 +231,6 @@ public final class ConsultaDao {
         return r;
     }
 
-    /** Consulta 10 pronta para o gráfico de faixa etária × sexo do dashboard (E2). */
     public List<Map<String, Object>> dosesPorFaixaEtariaESexo() throws SQLException {
         return executar(buscar(10), null);
     }

@@ -1,5 +1,3 @@
-// Aba Dashboard: filtro de UBS no topo e seção "Estatística" (gráficos da disciplina de Estatística).
-// Os indicadores (H13) entram acima da seção Estatística e também devem ler dashboard.cnes().
 const dashboard = {
   montado: false,
 
@@ -34,7 +32,6 @@ const dashboard = {
     await dashboard.estatistica(dashboard.cnes());
   },
 
-  // ==== ESTATÍSTICA ====
   async estatistica(cnes) {
     const base = '/api/dashboard/estatistica/';
     const [faixas, meses, situacao, idades] = await Promise.all([
@@ -51,7 +48,6 @@ const dashboard = {
     ].join('');
   },
 
-  // Moldura comum: título, pergunta respondida, variáveis, gráfico, legenda e tabela dos dados.
   figura({ titulo, pergunta, variaveis, grafico, legenda = '', linhas }) {
     return `<figure>
       <figcaption>${ui.esc(titulo)}</figcaption>
@@ -81,7 +77,6 @@ const dashboard = {
   MESES: ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'],
 
   graficoMeses(r) {
-    // Completa com zero os meses sem dose, de r.primeiro até r.ultimo (aaaa-mm).
     const todos = [];
     let [ano, mes] = r.primeiro.split('-').map(Number);
     for (let k = `${ano}-${String(mes).padStart(2, '0')}`; k <= r.ultimo; k = `${ano}-${String(mes).padStart(2, '0')}`) {
@@ -124,7 +119,6 @@ const dashboard = {
 
   graficoIdade(r) {
     const largura = 10, s = r.resumo;
-    // Completa as classes vazias entre a menor e a maior.
     const cont = Object.fromEntries(r.classes.map(c => [Number(c.inicio), Number(c.pacientes)]));
     const inicios = r.classes.map(c => Number(c.inicio));
     const classes = [];

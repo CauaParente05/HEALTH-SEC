@@ -6,9 +6,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
 
-/** Cadastro, alteração e exclusão de pacientes. */
 public final class PacienteDao {
-
     public Map<String, Object> buscar(String cns) throws SQLException {
         Map<String, Object> paciente = Database.queryUm("""
             SELECT p.cns, p.cpf, p.nome, p.data_nascimento, p.sexo, p.nome_mae,

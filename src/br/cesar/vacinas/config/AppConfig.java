@@ -6,7 +6,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 
-/** Lê config/app.properties (em UTF-8). A variável DB_PASSWORD, se existir, tem prioridade. */
 public final class AppConfig {
     private static final Properties props = new Properties();
 

@@ -7,7 +7,6 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-/** Serve os arquivos da pasta web/ (index.html, css, js). */
 public class StaticFiles implements HttpHandler {
     private final Path raiz;
 
@@ -18,7 +17,7 @@ public class StaticFiles implements HttpHandler {
         String caminho = ex.getRequestURI().getPath();
         if (caminho.equals("/")) caminho = "/index.html";
         Path arquivo = raiz.resolve(caminho.substring(1)).normalize();
-        if (!arquivo.startsWith(raiz) || !Files.isRegularFile(arquivo)) {   // bloqueia ../ e arquivo inexistente
+        if (!arquivo.startsWith(raiz) || !Files.isRegularFile(arquivo)) {
             ex.sendResponseHeaders(404, -1);
             ex.close();
             return;

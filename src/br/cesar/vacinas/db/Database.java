@@ -4,14 +4,11 @@ import br.cesar.vacinas.config.AppConfig;
 import java.sql.*;
 import java.util.*;
 
-/** Conexão JDBC e execução de SQL. Todo SQL chega aqui já escrito pelos DAOs. */
 public final class Database {
-
     public static Connection conectar() throws SQLException {
         return DriverManager.getConnection(AppConfig.get("db.url"), AppConfig.get("db.user"), AppConfig.senha());
     }
 
-    /** SELECT: devolve as linhas; cada linha é um mapa coluna -> valor (na ordem do SELECT). */
     public static List<Map<String, Object>> query(String sql, Object... params) throws SQLException {
         try (Connection c = conectar(); PreparedStatement ps = c.prepareStatement(sql)) {
             bind(ps, params);
@@ -28,18 +25,15 @@ public final class Database {
         }
     }
 
-    /** SELECT que devolve uma linha só (ou null). */
     public static Map<String, Object> queryUm(String sql, Object... params) throws SQLException {
         List<Map<String, Object>> l = query(sql, params);
         return l.isEmpty() ? null : l.get(0);
     }
 
-    /** INSERT/UPDATE/DELETE isolado (autocommit). Devolve o número de linhas afetadas. */
     public static int update(String sql, Object... params) throws SQLException {
         try (Connection c = conectar()) { return update(c, sql, params); }
     }
 
-    /** INSERT/UPDATE/DELETE dentro de uma transação aberta por emTransacao. */
     public static int update(Connection c, String sql, Object... params) throws SQLException {
         try (PreparedStatement ps = c.prepareStatement(sql)) {
             bind(ps, params);
@@ -49,7 +43,6 @@ public final class Database {
 
     public interface Trabalho<T> { T executar(Connection c) throws SQLException; }
 
-    /** Executa vários comandos numa transação: commit se tudo der certo, rollback em qualquer erro. */
     public static <T> T emTransacao(Trabalho<T> trabalho) throws SQLException {
         try (Connection c = conectar()) {
             c.setAutoCommit(false);

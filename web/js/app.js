@@ -1,4 +1,3 @@
-// Troca de abas. Cada aba tem um objeto com carregar() no seu próprio arquivo JS.
 const abas = { dashboard, consultas, pacientes, estoque };
 
 document.querySelectorAll('nav button').forEach(btn =>

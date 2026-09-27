@@ -7,7 +7,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-/** Parâmetros da requisição: query string (?a=1) e corpo de formulário (POST), mais as variáveis do caminho ({id}). */
 public class Request {
     private final Map<String, String> params = new HashMap<>();
     final Map<String, String> caminho = new HashMap<>();
@@ -29,13 +28,11 @@ public class Request {
         }
     }
 
-    /** Parâmetro opcional. Vazio vira null (o banco recebe NULL). */
     public String str(String nome) {
         String v = params.get(nome);
         return v == null || v.isBlank() ? null : v.trim();
     }
 
-    /** Parâmetro obrigatório. Se faltar, responde 400. */
     public String reqStr(String nome) {
         String v = str(nome);
         if (v == null) throw new HttpError(400, "Campo obrigatório: " + nome);
@@ -51,12 +48,10 @@ public class Request {
         }
     }
 
-    /** Número obrigatório. Se faltar, responde 400. */
     public int reqInt(String nome) {
         reqStr(nome);
         return inteiro(nome);
     }
 
-    /** Variável do caminho, ex.: {cns} em /api/pacientes/{cns}. */
     public String path(String nome) { return caminho.get(nome); }
 }

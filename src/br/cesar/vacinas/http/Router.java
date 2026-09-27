@@ -9,7 +9,6 @@ import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.*;
 
-/** Liga MÉTODO + caminho a um handler e transforma o retorno (ou o erro) em JSON. */
 public class Router implements HttpHandler {
     public interface Handler { Object handle(Request req) throws Exception; }
 

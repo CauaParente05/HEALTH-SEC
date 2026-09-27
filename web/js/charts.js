@@ -1,11 +1,7 @@
-// Gráficos em SVG desenhados à mão (sem biblioteca). Cada função devolve o texto do <svg>.
-// Cores por papel em style.css (--serie-1, --bom, --critico...). Tooltip: qualquer elemento
-// com data-tip="..." mostra o texto ao passar o mouse.
 const charts = {
-  L: 520, A: 260,                                   // viewBox; o SVG ocupa 100% da largura
-  M: { top: 22, right: 12, bottom: 40, left: 44 },  // margens da área de plotagem
+  L: 520, A: 260,
+  M: { top: 22, right: 12, bottom: 40, left: 44 },
 
-  // Eixo Y "redondo": máximo e passo em 1, 2 ou 5 × 10^n, com cerca de 4 divisões.
   escala(max) {
     if (!(max > 0)) return { max: 1, passo: 1 };
     const bruto = max / 4, pot = 10 ** Math.floor(Math.log10(bruto));
@@ -15,7 +11,6 @@ const charts = {
 
   num(v) { return Number(v).toLocaleString('pt-BR'); },
 
-  // Grade horizontal + rótulos do eixo Y. Devolve também a função y(valor) -> pixel.
   eixoY(maxDados) {
     const { L, A, M } = charts, e = charts.escala(maxDados);
     const y = v => A - M.bottom - (v / e.max) * (A - M.top - M.bottom);
@@ -31,7 +26,6 @@ const charts = {
     return `<svg viewBox="0 0 ${charts.L} ${charts.A}" role="img" aria-label="${ui.esc(rotulo)}">${corpo}</svg>`;
   },
 
-  // Barra vertical com topo arredondado e base reta, apoiada na linha de base.
   barra(x, larg, yTopo, yBase, cor, tip) {
     const h = yBase - yTopo;
     if (h <= 0) return '';
@@ -41,8 +35,6 @@ const charts = {
          Q${x + larg},${yTopo} ${x + larg},${yTopo + r} V${yBase} Z"/>`;
   },
 
-  // Barras agrupadas: uma categoria no eixo X, uma barra por série dentro do grupo.
-  // series: [{nome, cor, valores: [n por categoria]}]
   barrasAgrupadas({ categorias, series, rotulo }) {
     const { L, A, M } = charts;
     const max = Math.max(0, ...series.flatMap(s => s.valores));
@@ -64,7 +56,6 @@ const charts = {
     return charts.svg(corpo, rotulo);
   },
 
-  // Linha com pontos (série temporal). Rotula só o eixo a cada `cadaN` pontos, o maior valor e o último.
   linha({ rotulos, valores, rotulo, cadaN = 3 }) {
     const { L, A, M } = charts;
     const { svg: grade, y } = charts.eixoY(Math.max(0, ...valores));
@@ -75,7 +66,6 @@ const charts = {
     corpo += `<polyline class="traco" points="${valores.map((v, i) => `${x(i)},${y(v)}`).join(' ')}"/>`;
     valores.forEach((v, i) => {
       corpo += `<circle class="ponto" cx="${x(i)}" cy="${y(v)}" r="3.5"/>`;
-      // Alvo invisível maior que o ponto, para o tooltip ser fácil de acertar.
       corpo += `<rect class="alvo" x="${x(i) - passo / 2}" y="${M.top}" width="${passo}" height="${A - M.top - M.bottom}"
                  data-tip="${ui.esc(rotulos[i])}: ${charts.num(v)} dose(s)"/>`;
       if (i % cadaN === 0 || i === valores.length - 1) {
@@ -88,7 +78,6 @@ const charts = {
     return charts.svg(corpo, rotulo);
   },
 
-  // Barras horizontais com rótulo à esquerda e "n (p%)" à direita. itens: [{rotulo, valor, pct, cor}]
   barrasH({ itens, rotulo }) {
     const { L } = charts, esq = 96, dir = 90, alt = 26, gap = 12, topo = 8;
     const A = topo * 2 + itens.length * (alt + gap) - gap;
@@ -109,8 +98,6 @@ const charts = {
     return `<svg viewBox="0 0 ${L} ${A}" role="img" aria-label="${ui.esc(rotulo)}">${corpo}</svg>`;
   },
 
-  // Histograma: classes contíguas [inicio, inicio + largura) e linhas verticais de referência.
-  // classes: [{inicio, valor}] em ordem; marcas: [{valor, nome, classe}] (ex.: média, mediana).
   histograma({ classes, largura, marcas = [], rotulo, unidade = '' }) {
     const { L, A, M } = charts;
     const { svg: grade, y } = charts.eixoY(Math.max(0, ...classes.map(c => c.valor)));
@@ -118,7 +105,7 @@ const charts = {
     const x = v => M.left + ((v - xMin) / (xMax - xMin)) * (L - M.left - M.right);
     let corpo = grade;
     classes.forEach(c => {
-      const x0 = x(c.inicio) + 1, w = x(c.inicio + largura) - x(c.inicio) - 2;  // 2px de respiro entre barras
+      const x0 = x(c.inicio) + 1, w = x(c.inicio + largura) - x(c.inicio) - 2;
       corpo += charts.barra(x0, w, y(c.valor), y(0), 'var(--serie-1)',
         `${c.inicio} a ${c.inicio + largura - 1}${unidade}: ${charts.num(c.valor)}`);
     });
@@ -133,7 +120,6 @@ const charts = {
     return charts.svg(corpo, rotulo);
   },
 
-  // Legenda em HTML. itens: [{nome, cor}] (quadrado) ou [{nome, classe}] (traço de linha de referência).
   legenda(itens) {
     return `<div class="legenda">${itens.map(i => i.classe
       ? `<span><svg width="18" height="10"><line class="referencia ${i.classe}" x1="0" x2="18" y1="5" y2="5"/></svg>${ui.esc(i.nome)}</span>`
@@ -141,7 +127,6 @@ const charts = {
   },
 };
 
-// Tooltip único para todos os gráficos (delegação de eventos no documento).
 document.addEventListener('mousemove', e => {
   let tip = document.getElementById('tooltip-grafico');
   const alvo = e.target.closest?.('[data-tip]');

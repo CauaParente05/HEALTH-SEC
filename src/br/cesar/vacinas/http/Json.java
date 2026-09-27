@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.StringJoiner;
 
-/** Converte Map, List, String, número, booleano e datas em texto JSON. */
 public final class Json {
     public static String escrever(Object v) {
         if (v == null) return "null";
@@ -19,7 +18,7 @@ public final class Json {
             for (Object x : c) j.add(escrever(x));
             return j.toString();
         }
-        return texto(v.toString());   // String, java.sql.Date (aaaa-mm-dd), LocalDate...
+        return texto(v.toString());
     }
 
     private static String texto(String s) {
