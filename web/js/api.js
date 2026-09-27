@@ -8,6 +8,12 @@ const api = {
   async post(caminho, dados = {}) {
     return tratar(await fetch(caminho, { method: 'POST', body: new URLSearchParams(limpar(dados)) }));
   },
+  async put(caminho, dados = {}) {
+    return tratar(await fetch(caminho, { method: 'PUT', body: new URLSearchParams(limpar(dados)) }));
+  },
+  async delete(caminho) {
+    return tratar(await fetch(caminho, { method: 'DELETE' }));
+  },
 };
 
 function limpar(obj) {

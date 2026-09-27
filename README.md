@@ -269,6 +269,10 @@ Regras rápidas:
 | GET | `/api/consultas` | as 10 consultas: id, título, pergunta, recursos, SQL e parâmetro |
 | GET | `/api/consultas/{n}` | `{"colunas": [...], "linhas": [[...], ...]}`; a 3 exige `?cns=` (15 dígitos) e a 6 exige `?id_lote=` |
 | GET | `/api/pacientes` | `[{cns, nome}]` para o select da consulta 3 |
+| GET | `/api/pacientes/{cns}` | dados do paciente para alteração |
+| POST | `/api/pacientes` | cadastra paciente, prontuário e telefone |
+| PUT | `/api/pacientes/{cns}` | altera os dados e a UBS de referência |
+| DELETE | `/api/pacientes/{cns}` | exclui se o paciente não tiver dose APLICADA |
 | GET | `/api/lotes` | `[{id_lote, numero_lote, fabricante}]` para o select da consulta 6 |
 
 Nas rotas de estatística, `cnes` é opcional (vazio = todas as UBS) e filtra pela UBS de referência do paciente.

@@ -3,6 +3,7 @@ package br.cesar.vacinas.api;
 import br.cesar.vacinas.dao.CatalogoDao;
 import br.cesar.vacinas.dao.ConsultaDao;
 import br.cesar.vacinas.dao.DashboardDao;
+import br.cesar.vacinas.dao.PacienteDao;
 import br.cesar.vacinas.db.Database;
 import br.cesar.vacinas.http.HttpError;
 import br.cesar.vacinas.http.Request;
@@ -55,6 +56,18 @@ public final class Routes {
         r.get("/api/dashboard/estatistica/idade-pacientes", req -> dashboard.idadePacientes(cnes(req)));
         // ==== ESTOQUE (João Pedro) ====
         // ==== PACIENTES (Davila) ====
+        PacienteDao pacientes = new PacienteDao();
+        r.get("/api/pacientes/{cns}", req -> pacientes.buscar(req.path("cns")));
+        r.post("/api/pacientes", req -> pacientes.cadastrar(dadosPaciente(req, req.reqStr("cns"))));
+        r.put("/api/pacientes/{cns}", req -> pacientes.alterar(req.path("cns"), dadosPaciente(req, req.path("cns"))));
+        r.delete("/api/pacientes/{cns}", req -> pacientes.excluir(req.path("cns")));
+    }
+
+    private static PacienteDao.Dados dadosPaciente(Request req, String cns) {
+        return new PacienteDao.Dados(cns, req.str("cpf"), req.reqStr("nome"), req.reqStr("data_nascimento"),
+            req.reqStr("sexo"), req.reqStr("nome_mae"), req.reqStr("logradouro"), req.str("numero"),
+            req.reqStr("bairro"), req.reqStr("cep"), req.reqStr("cnes"), req.str("cns_responsavel"),
+            req.str("observacoes"), req.str("telefones"));
     }
 
     /** Filtro de UBS do dashboard: null = todas; se vier, precisa ter os 7 dígitos do CNES. */

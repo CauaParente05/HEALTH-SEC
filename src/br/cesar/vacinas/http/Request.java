@@ -14,7 +14,7 @@ public class Request {
 
     Request(HttpExchange ex) throws IOException {
         ler(ex.getRequestURI().getRawQuery());
-        if ("POST".equals(ex.getRequestMethod())) {
+        if ("POST".equals(ex.getRequestMethod()) || "PUT".equals(ex.getRequestMethod())) {
             ler(new String(ex.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
         }
     }

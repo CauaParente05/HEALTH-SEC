@@ -19,6 +19,8 @@ public class Router implements HttpHandler {
 
     public void get(String caminho, Handler h)  { rotas.add(new Rota("GET", caminho.split("/"), h)); }
     public void post(String caminho, Handler h) { rotas.add(new Rota("POST", caminho.split("/"), h)); }
+    public void put(String caminho, Handler h) { rotas.add(new Rota("PUT", caminho.split("/"), h)); }
+    public void delete(String caminho, Handler h) { rotas.add(new Rota("DELETE", caminho.split("/"), h)); }
 
     @Override
     public void handle(HttpExchange ex) throws IOException {
