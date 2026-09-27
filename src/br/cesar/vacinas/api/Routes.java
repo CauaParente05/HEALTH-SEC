@@ -3,6 +3,7 @@ package br.cesar.vacinas.api;
 import br.cesar.vacinas.dao.CatalogoDao;
 import br.cesar.vacinas.dao.ConsultaDao;
 import br.cesar.vacinas.dao.DashboardDao;
+import br.cesar.vacinas.dao.EstoqueDao;
 import br.cesar.vacinas.dao.PacienteDao;
 import br.cesar.vacinas.db.Database;
 import br.cesar.vacinas.http.HttpError;
@@ -55,6 +56,11 @@ public final class Routes {
         r.get("/api/dashboard/estatistica/situacao-doses", req -> dashboard.dosesPorSituacao(cnes(req)));
         r.get("/api/dashboard/estatistica/idade-pacientes", req -> dashboard.idadePacientes(cnes(req)));
         // ==== ESTOQUE (João Pedro) ====
+        EstoqueDao estoque = new EstoqueDao();
+        r.get("/api/estoque", req -> estoque.listar(req.str("cnes")));
+        r.post("/api/estoque", req -> estoque.entrada(req.reqStr("cnes"), req.reqInt("id_lote"), req.reqInt("quantidade")));
+        r.put("/api/estoque/{cnes}/{id_lote}", req -> estoque.ajustar(req.path("cnes"), req.path("id_lote"), req.reqInt("quantidade")));
+        r.delete("/api/estoque/{cnes}/{id_lote}", req -> estoque.remover(req.path("cnes"), req.path("id_lote")));
         // ==== PACIENTES (Davila) ====
         PacienteDao pacientes = new PacienteDao();
         r.get("/api/pacientes/{cns}", req -> pacientes.buscar(req.path("cns")));
