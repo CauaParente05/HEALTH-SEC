@@ -190,6 +190,119 @@ public final class ConsultaDao {
                      WHERE r.status = 'APLICADA') t
              GROUP BY t.ordem, t.faixa_etaria, t.sexo
              ORDER BY t.ordem, t.sexo""",
+            null),
+
+        new Consulta(11, "Doses pendentes sem estoque na UBS do paciente",
+            "Quais doses pendentes não podem ser aplicadas na UBS de referência do paciente, "
+                + "por falta de estoque válido da vacina?",
+            "ANTI JOIN (LEFT JOIN ... WHERE chave IS NULL), junção aninhada no LEFT JOIN",
+            """
+            SELECT u.nome AS ubs, p.nome AS paciente, v.nome AS vacina,
+                   r.numero_dose AS dose, r.data_prevista
+              FROM Registro_Dose r
+              JOIN Paciente p ON p.cns = r.cns
+              JOIN UBS u      ON u.cnes = p.cnes
+              JOIN Vacina v   ON v.codigo_vacina = r.codigo_vacina
+              LEFT JOIN (Estoque_UBS e
+                         JOIN Lote l ON l.id_lote = e.id_lote
+                                    AND l.data_validade >= CURDATE())
+                     ON e.cnes = p.cnes
+                    AND l.codigo_vacina = r.codigo_vacina
+                    AND e.quantidade_disponivel > 0
+             WHERE r.status = 'PENDENTE'
+               AND e.id_lote IS NULL
+             ORDER BY u.nome, p.nome, v.nome, r.numero_dose""",
+            null),
+
+        new Consulta(12, "Estoque válido x doses aplicadas, por UBS e vacina",
+            "Para cada UBS e vacina, quanto há em estoque válido e quantas doses já foram aplicadas, "
+                + "incluindo as combinações que só têm um dos dois?",
+            "FULL OUTER JOIN (emulado com LEFT JOIN UNION ALL RIGHT JOIN), CTE (WITH), COALESCE, CASE",
+            """
+            WITH estoque AS (
+                SELECT e.cnes, l.codigo_vacina, SUM(e.quantidade_disponivel) AS estoque_valido
+                  FROM Estoque_UBS e
+                  JOIN Lote l ON l.id_lote = e.id_lote
+                 WHERE l.data_validade >= CURDATE()
+                 GROUP BY e.cnes, l.codigo_vacina
+            ), aplicadas AS (
+                SELECT r.cnes, r.codigo_vacina, COUNT(*) AS doses_aplicadas
+                  FROM Registro_Dose r
+                 WHERE r.status = 'APLICADA'
+                 GROUP BY r.cnes, r.codigo_vacina
+            )
+            SELECT u.nome AS ubs, v.nome AS vacina,
+                   COALESCE(f.estoque_valido, 0)  AS estoque_valido,
+                   COALESCE(f.doses_aplicadas, 0) AS doses_aplicadas,
+                   CASE WHEN f.doses_aplicadas IS NULL THEN 'SÓ ESTOQUE'
+                        WHEN f.estoque_valido  IS NULL THEN 'SÓ APLICAÇÕES'
+                        ELSE 'ESTOQUE E APLICAÇÕES' END AS situacao
+              FROM (SELECT es.cnes, es.codigo_vacina, es.estoque_valido, ap.doses_aplicadas
+                      FROM estoque es
+                      LEFT JOIN aplicadas ap ON ap.cnes = es.cnes
+                                            AND ap.codigo_vacina = es.codigo_vacina
+                    UNION ALL
+                    SELECT ap.cnes, ap.codigo_vacina, es.estoque_valido, ap.doses_aplicadas
+                      FROM estoque es
+                     RIGHT JOIN aplicadas ap ON ap.cnes = es.cnes
+                                            AND ap.codigo_vacina = es.codigo_vacina
+                     WHERE es.cnes IS NULL) f
+              JOIN UBS u    ON u.cnes = f.cnes
+              JOIN Vacina v ON v.codigo_vacina = f.codigo_vacina
+             ORDER BY u.nome, v.nome""",
+            null),
+
+        new Consulta(13, "UBS que aplicaram mais doses que a média",
+            "Quais UBS aplicaram mais doses do que a média de doses aplicadas por UBS?",
+            "Subconsulta no HAVING com subconsulta aninhada no FROM (média de contagens), "
+                + "subconsulta escalar no SELECT",
+            """
+            SELECT u.nome AS ubs, COUNT(*) AS doses_aplicadas,
+                   (SELECT ROUND(AVG(m.qtd), 1)
+                      FROM (SELECT COUNT(*) AS qtd
+                              FROM Registro_Dose
+                             WHERE status = 'APLICADA'
+                             GROUP BY cnes) m) AS media_por_ubs
+              FROM Registro_Dose r
+              JOIN UBS u ON u.cnes = r.cnes
+             WHERE r.status = 'APLICADA'
+             GROUP BY u.cnes, u.nome
+            HAVING COUNT(*) > (SELECT AVG(m.qtd)
+                                 FROM (SELECT COUNT(*) AS qtd
+                                         FROM Registro_Dose
+                                        WHERE status = 'APLICADA'
+                                        GROUP BY cnes) m)
+             ORDER BY doses_aplicadas DESC""",
+            null),
+
+        new Consulta(14, "Doses atrasadas que já podem ser aplicadas",
+            "Quais doses atrasadas têm estoque válido da vacina na UBS de referência do paciente "
+                + "(busca ativa imediata)?",
+            "Subconsulta correlacionada com EXISTS no WHERE, subconsulta escalar correlacionada no SELECT",
+            """
+            SELECT u.nome AS ubs, p.nome AS paciente, v.nome AS vacina,
+                   r.numero_dose AS dose, r.data_prevista,
+                   DATEDIFF(CURDATE(), r.data_prevista) AS dias_de_atraso,
+                   (SELECT SUM(e.quantidade_disponivel)
+                      FROM Estoque_UBS e
+                      JOIN Lote l ON l.id_lote = e.id_lote
+                     WHERE e.cnes = p.cnes
+                       AND l.codigo_vacina = r.codigo_vacina
+                       AND l.data_validade >= CURDATE()) AS doses_em_estoque
+              FROM Registro_Dose r
+              JOIN Paciente p ON p.cns = r.cns
+              JOIN UBS u      ON u.cnes = p.cnes
+              JOIN Vacina v   ON v.codigo_vacina = r.codigo_vacina
+             WHERE r.status = 'PENDENTE'
+               AND r.data_prevista < CURDATE()
+               AND EXISTS (SELECT 1
+                             FROM Estoque_UBS e
+                             JOIN Lote l ON l.id_lote = e.id_lote
+                            WHERE e.cnes = p.cnes
+                              AND l.codigo_vacina = r.codigo_vacina
+                              AND l.data_validade >= CURDATE()
+                              AND e.quantidade_disponivel > 0)
+             ORDER BY u.nome, dias_de_atraso DESC""",
             null)
     );
 

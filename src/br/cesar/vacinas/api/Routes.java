@@ -26,7 +26,7 @@ public final class Routes {
             try { numero = Integer.parseInt(req.path("numero")); }
             catch (NumberFormatException e) { throw new HttpError(400, "Número de consulta inválido"); }
             ConsultaDao.Consulta c = consultas.buscar(numero);
-            if (c == null) throw new HttpError(404, "Consulta " + numero + " não existe (use 1 a 10)");
+            if (c == null) throw new HttpError(404, "Consulta " + numero + " não existe (use 1 a 14)");
             Object valor = null;
             if (c.parametro() != null) {
                 String nome = c.parametro().nome();
