@@ -78,21 +78,23 @@ const charts = {
     return charts.svg(corpo, rotulo);
   },
 
-  barrasH({ itens, rotulo }) {
-    const { L } = charts, esq = 96, dir = 90, alt = 26, gap = 12, topo = 8;
+  // itens: [{rotulo, valor, cor, pct?, dica?}]; sem pct mostra só o valor; dica = nome completo no tooltip.
+  barrasH({ itens, rotulo, esq = 96 }) {
+    const { L } = charts, dir = 90, alt = 26, gap = 12, topo = 8;
     const A = topo * 2 + itens.length * (alt + gap) - gap;
     const max = Math.max(1, ...itens.map(i => i.valor));
     let corpo = '';
     itens.forEach((it, k) => {
       const y = topo + k * (alt + gap), w = (it.valor / max) * (L - esq - dir);
+      const texto = charts.num(it.valor) + (it.pct === undefined ? '' : ` (${charts.num(it.pct)}%)`);
       corpo += `<text class="rotulo" x="${esq - 8}" y="${y + alt / 2 + 4}" text-anchor="end">${ui.esc(it.rotulo)}</text>`;
       if (w > 0) {
         const r = Math.min(4, w);
-        corpo += `<path class="marca" fill="${it.cor}" data-tip="${ui.esc(it.rotulo)}: ${charts.num(it.valor)} (${it.pct}%)"
+        corpo += `<path class="marca" fill="${it.cor}" data-tip="${ui.esc(it.dica ?? it.rotulo)}: ${ui.esc(texto)}"
           d="M${esq},${y} H${esq + w - r} Q${esq + w},${y} ${esq + w},${y + r} V${y + alt - r}
              Q${esq + w},${y + alt} ${esq + w - r},${y + alt} H${esq} Z"/>`;
       }
-      corpo += `<text class="valor" x="${esq + w + 6}" y="${y + alt / 2 + 4}">${charts.num(it.valor)} (${charts.num(it.pct)}%)</text>`;
+      corpo += `<text class="valor" x="${esq + w + 6}" y="${y + alt / 2 + 4}">${ui.esc(texto)}</text>`;
     });
     corpo += `<line class="base" x1="${esq}" x2="${esq}" y1="0" y2="${A}"/>`;
     return `<svg viewBox="0 0 ${L} ${A}" role="img" aria-label="${ui.esc(rotulo)}">${corpo}</svg>`;

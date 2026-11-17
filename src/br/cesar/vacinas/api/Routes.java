@@ -8,10 +8,12 @@ import br.cesar.vacinas.dao.LoteDao;
 import br.cesar.vacinas.dao.PacienteDao;
 import br.cesar.vacinas.dao.ProfissionalDao;
 import br.cesar.vacinas.dao.RotinaDao;
+import br.cesar.vacinas.dao.ViewDao;
 import br.cesar.vacinas.db.Database;
 import br.cesar.vacinas.http.HttpError;
 import br.cesar.vacinas.http.Request;
 import br.cesar.vacinas.http.Router;
+import java.util.HashMap;
 import java.util.Map;
 
 public final class Routes {
@@ -42,6 +44,30 @@ public final class Routes {
                 }
             }
             return consultas.executarTabela(c, valor);
+        });
+
+        ViewDao views = new ViewDao();
+        r.get("/api/views", req -> views.listar());
+        r.get("/api/views/{id}", req -> {
+            ViewDao.View v = views.buscar(req.path("id"));
+            if (v == null) throw new HttpError(404, "View não encontrada");
+            Map<String, Object> valores = new HashMap<>();
+            for (ViewDao.Filtro f : v.filtros()) {
+                Object valor = switch (f.tipo()) {
+                    case "ubs" -> cnes(req, f.nome());
+                    case "vacina" -> req.inteiro(f.nome());
+                    case "marcar" -> req.str(f.nome()) == null ? null : 1;
+                    default -> req.str(f.nome());
+                };
+                if (f.tipo().equals("paciente") && valor != null && !((String) valor).matches("\\d{15}")) {
+                    throw new HttpError(400, "O CNS deve ter 15 dígitos");
+                }
+                if (f.opcoes() != null && valor != null && !f.opcoes().contains(valor)) {
+                    throw new HttpError(400, "Valor inválido em " + f.nome());
+                }
+                valores.put(f.nome(), valor);
+            }
+            return views.executar(v, valores);
         });
 
         DashboardDao dashboard = new DashboardDao();
@@ -124,7 +150,11 @@ public final class Routes {
     }
 
     private static String cnes(Request req) {
-        String cnes = req.str("cnes");
+        return cnes(req, "cnes");
+    }
+
+    private static String cnes(Request req, String nome) {
+        String cnes = req.str(nome);
         if (cnes != null && !cnes.matches("\\d{7}")) throw new HttpError(400, "CNES deve ter 7 dígitos");
         return cnes;
     }

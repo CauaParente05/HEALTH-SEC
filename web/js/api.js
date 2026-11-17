@@ -46,7 +46,10 @@ const ui = {
     }</tbody></table>`;
   },
   selo(situacao) {
-    const classe = { 'VENCIDO': 'critico', 'VENCE EM 30 DIAS': 'alerta', 'ATRASADA': 'critico', 'APLICADA': 'bom' }[situacao] ?? '';
+    const classe = {
+      'VENCIDO': 'critico', 'VENCE EM 30 DIAS': 'alerta', 'VENCE EM ATÉ 30 DIAS': 'alerta', 'VÁLIDO': 'bom',
+      'ATRASADA': 'critico', 'APLICADA': 'bom',
+    }[situacao] ?? '';
     return `<span class="selo ${classe}">${ui.esc(situacao)}</span>`;
   },
   opcoes(lista, valor, texto) {

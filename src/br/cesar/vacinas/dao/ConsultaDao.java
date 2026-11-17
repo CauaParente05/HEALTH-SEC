@@ -334,7 +334,10 @@ public final class ConsultaDao {
     }
 
     public Map<String, Object> executarTabela(Consulta c, Object valor) throws SQLException {
-        List<Map<String, Object>> resultado = executar(c, valor);
+        return comoTabela(executar(c, valor));
+    }
+
+    public static Map<String, Object> comoTabela(List<Map<String, Object>> resultado) {
         List<String> colunas = resultado.isEmpty() ? List.of() : new ArrayList<>(resultado.get(0).keySet());
         List<List<Object>> linhas = new ArrayList<>();
         for (Map<String, Object> linha : resultado) linhas.add(new ArrayList<>(linha.values()));

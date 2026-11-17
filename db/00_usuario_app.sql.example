@@ -15,6 +15,7 @@ CREATE USER IF NOT EXISTS 'ubs_vacinas_app'@'localhost' IDENTIFIED BY '<SENHA>';
 ALTER USER 'ubs_vacinas_app'@'localhost' IDENTIFIED BY '<SENHA>';
 
 -- Somente DML no banco do projeto: a aplicação não cria nem apaga tabelas.
-GRANT SELECT, INSERT, UPDATE, DELETE ON bd_vacinas_ubs.* TO 'ubs_vacinas_app'@'localhost';
+-- EXECUTE: a aba Rotinas do banco chama as funções e os procedimentos da Etapa 05.
+GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE ON bd_vacinas_ubs.* TO 'ubs_vacinas_app'@'localhost';
 
 SHOW GRANTS FOR 'ubs_vacinas_app'@'localhost';

@@ -33,7 +33,8 @@ HEALTH-SEC/
 │   ├── http/                       Router, Request, Json, StaticFiles, HttpError
 │   ├── api/Routes.java             todos os endpoints: MÉTODO + caminho -> método do DAO
 │   └── dao/                        *** todo o SQL da aplicação *** (um DAO por funcionalidade)
-│       └── ConsultaDao.java        as 14 consultas (aba Consultas)
+│       ├── ConsultaDao.java        as 14 consultas (aba Consultas)
+│       └── ViewDao.java            as views da Etapa 04, com filtros (aba Consultas)
 └── web/                            front servido pelo próprio Java em http://localhost:8080
     ├── index.html                  página única, uma <section> por aba
     ├── css/style.css
@@ -41,7 +42,7 @@ HEALTH-SEC/
         ├── api.js                  fetch, tratamento de erros e utilitários de tela (ui)
         ├── app.js                  troca de abas
         ├── charts.js               gráficos SVG
-        ├── consultas.js            aba Consultas: seletor, SQL e tabela de resultado
+        ├── consultas.js            aba Consultas: consultas e views, com parâmetros, indicadores, gráficos e filtros (VISUAL)
         └── dashboard.js, pacientes.js, estoque.js, lotes.js, profissionais.js, rotinas.js   uma aba cada
 ```
 
@@ -271,6 +272,9 @@ Regras rápidas:
 | GET | `/api/dashboard/estatistica/idade-pacientes?cnes=` | histograma da idade (classes de 10 anos) e medidas resumo: `{classes: [{inicio, pacientes}], resumo: {n, media, desvio_padrao, minimo, maximo, mediana}}` |
 | GET | `/api/consultas` | as 14 consultas: id, título, pergunta, recursos, SQL e parâmetro |
 | GET | `/api/consultas/{n}` | `{"colunas": [...], "linhas": [[...], ...]}`; a 3 exige `?cns=` (15 dígitos) e a 6 exige `?id_lote=` |
+| GET | `/api/views` | as views da Etapa 04: id, nome, título, pergunta, SQL e filtros |
+| GET | `/api/views/carteira?cns=&cnes=&codigo_vacina=&situacao=` | `vw_carteira_vacinacao` filtrada (todos os filtros opcionais), no formato `{colunas, linhas}` |
+| GET | `/api/views/estoque?cnes=&codigo_vacina=&situacao_validade=&com_saldo=1` | `vw_posicao_estoque` filtrada (todos os filtros opcionais), no formato `{colunas, linhas}` |
 | GET | `/api/pacientes` | `[{cns, nome}]` para o select da consulta 3 |
 | GET | `/api/pacientes/{cns}` | dados do paciente para alteração |
 | POST | `/api/pacientes` | cadastra paciente, prontuário e telefone |
