@@ -45,6 +45,10 @@ const ui = {
       linhas.map(l => `<tr>${cols.map(c => `<td>${ui.esc(l[c])}</td>`).join('')}</tr>`).join('')
     }</tbody></table>`;
   },
+  selo(situacao) {
+    const classe = { 'VENCIDO': 'critico', 'VENCE EM 30 DIAS': 'alerta', 'ATRASADA': 'critico', 'APLICADA': 'bom' }[situacao] ?? '';
+    return `<span class="selo ${classe}">${ui.esc(situacao)}</span>`;
+  },
   opcoes(lista, valor, texto) {
     return lista.map(x => `<option value="${ui.esc(x[valor])}">${ui.esc(x[texto])}</option>`).join('');
   },

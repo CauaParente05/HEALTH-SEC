@@ -4,7 +4,9 @@ import br.cesar.vacinas.dao.CatalogoDao;
 import br.cesar.vacinas.dao.ConsultaDao;
 import br.cesar.vacinas.dao.DashboardDao;
 import br.cesar.vacinas.dao.EstoqueDao;
+import br.cesar.vacinas.dao.LoteDao;
 import br.cesar.vacinas.dao.PacienteDao;
+import br.cesar.vacinas.dao.ProfissionalDao;
 import br.cesar.vacinas.db.Database;
 import br.cesar.vacinas.http.HttpError;
 import br.cesar.vacinas.http.Request;
@@ -17,7 +19,7 @@ public final class Routes {
 
         CatalogoDao catalogo = new CatalogoDao();
         r.get("/api/pacientes", req -> catalogo.pacientes());
-        r.get("/api/lotes", req -> catalogo.lotes());
+        r.get("/api/vacinas", req -> catalogo.vacinas());
 
         ConsultaDao consultas = new ConsultaDao();
         r.get("/api/consultas", req -> consultas.listar());
@@ -59,6 +61,36 @@ public final class Routes {
         r.post("/api/pacientes", req -> pacientes.cadastrar(dadosPaciente(req, req.reqStr("cns"))));
         r.put("/api/pacientes/{cns}", req -> pacientes.alterar(req.path("cns"), dadosPaciente(req, req.path("cns"))));
         r.delete("/api/pacientes/{cns}", req -> pacientes.excluir(req.path("cns")));
+
+        LoteDao lotes = new LoteDao();
+        r.get("/api/lotes", req -> lotes.listar(req.inteiro("codigo_vacina")));
+        r.get("/api/lotes/{id}", req -> lotes.buscar(id(req)));
+        r.post("/api/lotes", req -> lotes.cadastrar(dadosLote(req, req.reqInt("codigo_vacina"))));
+        r.put("/api/lotes/{id}", req -> lotes.alterar(id(req), dadosLote(req, null)));
+        r.delete("/api/lotes/{id}", req -> lotes.excluir(id(req)));
+
+        ProfissionalDao profissionais = new ProfissionalDao();
+        r.get("/api/profissionais", req -> profissionais.listar(cnes(req)));
+        r.get("/api/profissionais/{id}", req -> profissionais.buscar(id(req)));
+        r.post("/api/profissionais", req -> profissionais.cadastrar(dadosProfissional(req)));
+        r.put("/api/profissionais/{id}", req -> profissionais.alterar(id(req), dadosProfissional(req)));
+        r.delete("/api/profissionais/{id}", req -> profissionais.excluir(id(req)));
+    }
+
+    private static LoteDao.Dados dadosLote(Request req, Integer codigoVacina) {
+        return new LoteDao.Dados(codigoVacina, req.reqStr("numero_lote"), req.reqStr("fabricante"),
+            req.reqStr("data_validade"), req.reqInt("quantidade_total"));
+    }
+
+    private static ProfissionalDao.Dados dadosProfissional(Request req) {
+        return new ProfissionalDao.Dados(req.reqStr("nome"), req.reqStr("cargo"), req.reqStr("registro_conselho"),
+            req.reqStr("cnes"), req.inteiro("id_supervisor"), req.inteiro("coordena_sala_vacina"),
+            req.str("especialidade"), req.str("data_ultima_capacitacao"));
+    }
+
+    private static int id(Request req) {
+        try { return Integer.parseInt(req.path("id")); }
+        catch (NumberFormatException e) { throw new HttpError(400, "Identificador inválido"); }
     }
 
     private static PacienteDao.Dados dadosPaciente(Request req, String cns) {

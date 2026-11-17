@@ -10,7 +10,8 @@ public final class CatalogoDao {
         return Database.query("SELECT cns, nome FROM Paciente ORDER BY nome");
     }
 
-    public List<Map<String, Object>> lotes() throws SQLException {
-        return Database.query("SELECT id_lote, numero_lote, fabricante FROM Lote ORDER BY fabricante, numero_lote");
+    public List<Map<String, Object>> vacinas() throws SQLException {
+        return Database.query("SELECT codigo_vacina, nome FROM Vacina ORDER BY nome");
     }
+
 }

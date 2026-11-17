@@ -42,7 +42,7 @@ HEALTH-SEC/
         ├── app.js                  troca de abas
         ├── charts.js               gráficos SVG
         ├── consultas.js            aba Consultas: seletor, SQL e tabela de resultado
-        └── dashboard.js, pacientes.js, estoque.js   uma aba cada
+        └── dashboard.js, pacientes.js, estoque.js, lotes.js, profissionais.js   uma aba cada
 ```
 
 ---
@@ -273,7 +273,21 @@ Regras rápidas:
 | POST | `/api/pacientes` | cadastra paciente, prontuário e telefone |
 | PUT | `/api/pacientes/{cns}` | altera os dados e a UBS de referência |
 | DELETE | `/api/pacientes/{cns}` | exclui se o paciente não tiver dose APLICADA |
-| GET | `/api/lotes` | `[{id_lote, numero_lote, fabricante}]` para o select da consulta 6 |
+| GET | `/api/vacinas` | `[{codigo_vacina, nome}]` para selects |
+| GET | `/api/estoque?cnes=` | estoque por UBS e lote |
+| POST | `/api/estoque` | entrada de doses de um lote em uma UBS |
+| PUT | `/api/estoque/{cnes}/{id_lote}` | ajusta a quantidade disponível |
+| DELETE | `/api/estoque/{cnes}/{id_lote}` | remove o lote do estoque da UBS |
+| GET | `/api/lotes?codigo_vacina=` | lotes com vacina, situação da validade, total em estoque e doses aplicadas (também alimenta os selects de lote) |
+| GET | `/api/lotes/{id}` | dados do lote para alteração |
+| POST | `/api/lotes` | cadastra lote (lote vencido é barrado pelo trigger `trg_bloqueia_lote_vencido_entrada`) |
+| PUT | `/api/lotes/{id}` | altera número, fabricante, validade e quantidade total (a vacina não muda) |
+| DELETE | `/api/lotes/{id}` | exclui se o lote não estiver em estoque nem aplicado |
+| GET | `/api/profissionais?cnes=` | profissionais com UBS, supervisor, campo do subtipo e doses aplicadas |
+| GET | `/api/profissionais/{id}` | dados do profissional para alteração |
+| POST | `/api/profissionais` | cadastra profissional (só o campo do subtipo do cargo é gravado) |
+| PUT | `/api/profissionais/{id}` | altera (supervisor de si mesmo é barrado pelo trigger `trg_profissional_bu`) |
+| DELETE | `/api/profissionais/{id}` | exclui se não tiver dose aplicada; supervisionados ficam sem supervisor |
 
 Nas rotas de estatística, `cnes` é opcional (vazio = todas as UBS) e filtra pela UBS de referência do paciente.
 
