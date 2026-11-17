@@ -13,6 +13,8 @@ import br.cesar.vacinas.db.Database;
 import br.cesar.vacinas.http.HttpError;
 import br.cesar.vacinas.http.Request;
 import br.cesar.vacinas.http.Router;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -72,10 +74,15 @@ public final class Routes {
 
         DashboardDao dashboard = new DashboardDao();
         r.get("/api/dashboard/ubs", req -> dashboard.listarUbs());
-        r.get("/api/dashboard/estatistica/faixa-etaria-sexo", req -> dashboard.dosesPorFaixaEtariaESexo(cnes(req)));
-        r.get("/api/dashboard/estatistica/doses-por-mes", req -> dashboard.dosesPorMes(cnes(req)));
-        r.get("/api/dashboard/estatistica/situacao-doses", req -> dashboard.dosesPorSituacao(cnes(req)));
-        r.get("/api/dashboard/estatistica/idade-pacientes", req -> dashboard.idadePacientes(cnes(req)));
+        r.get("/api/dashboard/indicadores", req -> dashboard.indicadores(filtroDashboard(req)));
+        r.get("/api/dashboard/estatistica/faixa-etaria-sexo", req -> dashboard.dosesPorFaixaEtariaESexo(filtroDashboard(req)));
+        r.get("/api/dashboard/estatistica/doses-por-mes", req -> dashboard.dosesPorMes(filtroDashboard(req)));
+        r.get("/api/dashboard/estatistica/situacao-doses", req -> dashboard.dosesPorSituacao(filtroDashboard(req)));
+        r.get("/api/dashboard/estatistica/idade-pacientes", req -> dashboard.idadePacientes(filtroDashboard(req)));
+        r.get("/api/dashboard/estatistica/atrasos", req -> dashboard.atrasos(filtroDashboard(req)));
+        r.get("/api/dashboard/estatistica/top-vacinas", req -> dashboard.topVacinas(filtroDashboard(req)));
+        r.get("/api/dashboard/estatistica/dia-semana", req -> dashboard.dosesPorDiaSemana(filtroDashboard(req)));
+        r.get("/api/dashboard/estatistica/correlacao-ubs", req -> dashboard.correlacaoUbs(filtroDashboard(req)));
 
         EstoqueDao estoque = new EstoqueDao();
         r.get("/api/estoque", req -> estoque.listar(req.str("cnes")));
@@ -119,6 +126,20 @@ public final class Routes {
         r.get("/api/rotinas/log-status-dose", req -> rotinas.logStatus(req.str("cns"), 100));
         r.post("/api/rotinas/testar-lote-vencido", req -> rotinas.testarEntradaLote(req.reqInt("codigo_vacina"),
             req.reqStr("data_validade")));
+    }
+
+    private static DashboardDao.Filtro filtroDashboard(Request req) {
+        String sexo = req.str("sexo");
+        if (sexo != null && !sexo.matches("[FM]")) throw new HttpError(400, "Sexo deve ser F ou M");
+        LocalDate de = data(req, "de"), ate = data(req, "ate");
+        if (de != null && ate != null && de.isAfter(ate)) throw new HttpError(400, "A data inicial é depois da final");
+        return new DashboardDao.Filtro(cnes(req), de, ate, req.inteiro("codigo_vacina"), sexo);
+    }
+
+    private static LocalDate data(Request req, String nome) {
+        String v = req.str(nome);
+        try { return v == null ? null : LocalDate.parse(v); }
+        catch (DateTimeParseException e) { throw new HttpError(400, "Data inválida em " + nome + " (use AAAA-MM-DD)"); }
     }
 
     private static String cnesObrigatorio(Request req) {

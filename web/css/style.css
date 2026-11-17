@@ -88,6 +88,33 @@ figure svg .alvo:hover { fill: rgba(31, 95, 191, .06); }
 .referencia { stroke: #1c2430; stroke-width: 2; }
 .referencia.media { stroke-dasharray: 6 3; }
 .referencia.mediana { stroke-dasharray: 2 3; }
+.referencia.moda { stroke-dasharray: 8 3 2 3; stroke: var(--tinta-2); }
+.referencia.tendencia, figure svg .tendencia { stroke: var(--tinta-2); stroke-width: 2; stroke-dasharray: 5 4; fill: none; }
+figure svg .fatia { stroke: #fff; stroke-width: 2; }
+figure svg .centro { font-size: 22px; }
+figure svg .area-radar { fill-opacity: .15; stroke-width: 2; stroke-linejoin: round; }
+figure svg .ponto-radar { stroke: #fff; stroke-width: 2; }
+figure svg .ponto-dispersao { fill: var(--serie-1); stroke: #fff; stroke-width: 2; }
+figure svg .ponto-dispersao.destaque { fill: var(--serie-2); }
+figure svg .alvo-ponto { fill: transparent; }
+figure svg .alvo-ponto:hover { fill: rgba(31, 95, 191, .10); }
+.dash-filtros { background: #fff; border: 1px solid var(--borda); border-radius: 8px; padding: 10px 12px; margin: 0 0 6px; gap: 12px; }
+.dash-filtros label { font-weight: 600; font-size: 14px; }
+#dash-resumo-filtro { margin: 0 0 12px; font-size: 13px; }
+.dash-kpis { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+figure .legenda svg { display: inline-block; width: 18px; height: 10px; flex: none; }
+.dash-kpis .card span { font-size: 13px; color: var(--tinta-2); }
+.dash-kpis .card b { margin: 4px 0; }
+.dash-kpis .card b.texto { font-size: 18px; line-height: 1.3; }
+.dash-kpis .card small { display: block; font-size: 12px; color: var(--tinta-3); }
+.dash-kpis .delta.sobe { color: #0a6b0a; font-weight: 600; }
+.dash-kpis .delta.desce { color: #8f1d1d; font-weight: 600; }
+.medidas { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 10px 0 0; }
+.medidas div { background: var(--fundo); border-radius: 6px; padding: 6px 8px; }
+.medidas dt { font-size: 12px; color: var(--tinta-2); }
+.medidas dd { margin: 0; font-weight: 600; }
+.filtros-graf { font-style: italic; }
+@media (max-width: 520px) { .medidas { grid-template-columns: repeat(2, 1fr); } }
 .legenda { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 8px; font-size: 13px; color: var(--tinta-2); }
 .legenda span { display: flex; align-items: center; gap: 6px; }
 .legenda i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }

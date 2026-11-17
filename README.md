@@ -266,10 +266,15 @@ Regras rápidas:
 |---|---|---|
 | GET | `/api/health` | versão do MySQL e nome do banco (teste de conexão) |
 | GET | `/api/dashboard/ubs` | `[{cnes, nome}]` para o filtro de UBS do dashboard |
-| GET | `/api/dashboard/estatistica/faixa-etaria-sexo?cnes=` | doses aplicadas por faixa etária (idade na aplicação) e sexo: `[{ordem, faixa, sexo, doses}]` |
-| GET | `/api/dashboard/estatistica/doses-por-mes?cnes=` | doses aplicadas por mês nos últimos 24 meses: `{primeiro, ultimo, meses: [{mes, doses}]}` |
-| GET | `/api/dashboard/estatistica/situacao-doses?cnes=` | doses por situação (APLICADA, PENDENTE, ATRASADA, CANCELADA): `[{situacao, doses, percentual}]` |
-| GET | `/api/dashboard/estatistica/idade-pacientes?cnes=` | histograma da idade (classes de 10 anos) e medidas resumo: `{classes: [{inicio, pacientes}], resumo: {n, media, desvio_padrao, minimo, maximo, mediana}}` |
+| GET | `/api/dashboard/indicadores` | pacientes, doses aplicadas (e variação vs. período anterior), média mensal, % em dia, atrasadas, estoque válido/vencido, vacina mais aplicada |
+| GET | `/api/dashboard/estatistica/doses-por-mes` | doses aplicadas por mês no período: `{primeiro, ultimo, meses: [{mes, doses}]}` |
+| GET | `/api/dashboard/estatistica/situacao-doses` | doses por `fn_situacao_dose`: `[{situacao, doses, percentual}]` |
+| GET | `/api/dashboard/estatistica/top-vacinas` | doses aplicadas por vacina: `[{vacina, doses, percentual}]` |
+| GET | `/api/dashboard/estatistica/faixa-etaria-sexo` | doses aplicadas por faixa etária (idade na aplicação) e sexo: `[{ordem, faixa, sexo, doses}]` |
+| GET | `/api/dashboard/estatistica/idade-pacientes` | idade dos pacientes: `{largura, classes: [{inicio, n}], resumo}` |
+| GET | `/api/dashboard/estatistica/atrasos` | dias de atraso das doses atrasadas: `{largura, classes: [{inicio, n}], resumo}` |
+| GET | `/api/dashboard/estatistica/dia-semana` | doses aplicadas por dia da semana (1 = domingo): `[{dia, doses}]` |
+| GET | `/api/dashboard/estatistica/correlacao-ubs` | por UBS, pacientes (x) × doses aplicadas (y): `{pontos: [{cnes, nome, x, y}], estatistica: {n, pearson, inclinacao, intercepto}}` |
 | GET | `/api/consultas` | as 14 consultas: id, título, pergunta, recursos, SQL e parâmetro |
 | GET | `/api/consultas/{n}` | `{"colunas": [...], "linhas": [[...], ...]}`; a 3 exige `?cns=` (15 dígitos) e a 6 exige `?id_lote=` |
 | GET | `/api/views` | as views da Etapa 04: id, nome, título, pergunta, SQL e filtros |
@@ -306,7 +311,10 @@ Regras rápidas:
 | GET | `/api/rotinas/log-status-dose?cns=` | últimas 100 linhas de `Log_Status_Dose` |
 | POST | `/api/rotinas/testar-lote-vencido` | tenta inserir lote e sempre faz ROLLBACK: `{bloqueado, mensagem}` do `trg_bloqueia_lote_vencido_entrada` |
 
-Nas rotas de estatística, `cnes` é opcional (vazio = todas as UBS) e filtra pela UBS de referência do paciente.
+Todas as rotas de `/api/dashboard/indicadores` e `/api/dashboard/estatistica/*` aceitam os mesmos filtros, todos opcionais:
+`cnes` (UBS de referência do paciente), `de` e `ate` (período da data de aplicação, `AAAA-MM-DD`), `codigo_vacina` e `sexo` (`F`/`M`).
+Cada rota ignora o que não se aplica a ela (ex.: a idade dos pacientes não tem período). Os `resumo` trazem
+`{n, media, mediana, moda, variancia, desvio_padrao, minimo, maximo}`, calculados no SQL.
 
 Cada rota nova entra nesta tabela no mesmo PR.
 
