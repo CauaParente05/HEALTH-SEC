@@ -7,6 +7,7 @@ import br.cesar.vacinas.dao.EstoqueDao;
 import br.cesar.vacinas.dao.LoteDao;
 import br.cesar.vacinas.dao.PacienteDao;
 import br.cesar.vacinas.dao.ProfissionalDao;
+import br.cesar.vacinas.dao.RotinaDao;
 import br.cesar.vacinas.db.Database;
 import br.cesar.vacinas.http.HttpError;
 import br.cesar.vacinas.http.Request;
@@ -75,6 +76,28 @@ public final class Routes {
         r.post("/api/profissionais", req -> profissionais.cadastrar(dadosProfissional(req)));
         r.put("/api/profissionais/{id}", req -> profissionais.alterar(id(req), dadosProfissional(req)));
         r.delete("/api/profissionais/{id}", req -> profissionais.excluir(id(req)));
+
+        RotinaDao rotinas = new RotinaDao();
+        r.get("/api/rotinas/fn-situacao-dose", req -> rotinas.situacaoDose(req.reqStr("status"), req.reqStr("data_prevista")));
+        r.get("/api/rotinas/fn-situacao-dose/registradas", req -> rotinas.situacaoDosesRegistradas(cnes(req)));
+        r.get("/api/rotinas/fn-saldo-aplicavel", req -> rotinas.saldoAplicavel(cnesObrigatorio(req)));
+        r.get("/api/rotinas/doses-aplicaveis", req -> rotinas.dosesAplicaveis(cnesObrigatorio(req)));
+        r.get("/api/rotinas/lotes-aplicaveis", req -> rotinas.lotesAplicaveis(cnesObrigatorio(req), req.reqInt("codigo_vacina")));
+        r.post("/api/rotinas/pr-registrar-aplicacao-dose", req -> rotinas.aplicarDose(new RotinaDao.Aplicacao(
+            req.reqStr("cns"), req.reqInt("codigo_vacina"), req.reqInt("numero_dose"), req.reqInt("id_lote"),
+            req.reqInt("id_profissional"), cnesObrigatorio(req), req.str("local_anatomico"))));
+        r.post("/api/rotinas/pr-baixa-estoque-fifo", req -> rotinas.baixaFifo(cnesObrigatorio(req),
+            req.reqInt("codigo_vacina"), req.reqInt("quantidade")));
+        r.post("/api/rotinas/cancelar-dose", req -> rotinas.cancelarDose(req.reqStr("cns"),
+            req.reqInt("codigo_vacina"), req.reqInt("numero_dose")));
+        r.get("/api/rotinas/log-status-dose", req -> rotinas.logStatus(req.str("cns"), 100));
+        r.post("/api/rotinas/testar-lote-vencido", req -> rotinas.testarEntradaLote(req.reqInt("codigo_vacina"),
+            req.reqStr("data_validade")));
+    }
+
+    private static String cnesObrigatorio(Request req) {
+        req.reqStr("cnes");
+        return cnes(req);
     }
 
     private static LoteDao.Dados dadosLote(Request req, Integer codigoVacina) {

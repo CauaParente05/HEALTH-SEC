@@ -168,5 +168,21 @@ figure svg .alvo:hover { fill: rgba(31, 95, 191, .06); }
 .selo.critico { background: #f8d7da; color: #8f1d1d; }
 form label { display: flex; align-items: center; gap: 6px; }
 form label[hidden], form [hidden] { display: none; }
+.rotinas { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 16px; }
+.rotina { background: #fff; border: 1px solid var(--borda); border-radius: 8px; padding: 14px; min-width: 0; }
+.rotina.larga { grid-column: 1 / -1; }
+.rotina-topo { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.rotina-topo h3 { margin: 0; font-size: 16px; font-family: ui-monospace, Consolas, monospace; }
+.rotina .tipo { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--azul); background: #e8effa; padding: 2px 8px; border-radius: 10px; }
+.rotina .pergunta { color: var(--tinta-2); font-size: 14px; }
+.rotina h4 { margin: 16px 0 4px; font-size: 14px; }
+.rotina form select { max-width: 100%; }
+.resultado-rotina { font-weight: 600; }
+.cards.mini { margin: 12px 0; }
+.cards.mini .card { padding: 10px 12px; }
+.cards.mini .card span { font-size: 13px; color: var(--tinta-2); }
+.cards.mini .card b { font-size: 22px; }
+figure.sem-borda { border: 0; padding: 0; }
+.antes-depois tr.mudou td { background: #fff8e1; font-weight: 600; }
 #tooltip-grafico { position: fixed; z-index: 10; background: #1c2430; color: #fff; padding: 6px 10px; border-radius: 6px; font-size: 13px; pointer-events: none; white-space: nowrap; }
-@media (max-width: 520px) { .graficos { grid-template-columns: 1fr; } main { padding: 16px; } }
+@media (max-width: 520px) { .graficos, .rotinas { grid-template-columns: 1fr; } main { padding: 16px; } }

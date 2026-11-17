@@ -1,4 +1,4 @@
-const abas = { dashboard, consultas, pacientes, estoque, lotes, profissionais };
+const abas = { dashboard, consultas, pacientes, estoque, lotes, profissionais, rotinas };
 
 document.querySelectorAll('nav button').forEach(btn =>
   btn.addEventListener('click', () => abrir(btn.dataset.aba)));

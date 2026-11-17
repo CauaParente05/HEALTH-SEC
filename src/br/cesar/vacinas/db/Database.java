@@ -10,7 +10,11 @@ public final class Database {
     }
 
     public static List<Map<String, Object>> query(String sql, Object... params) throws SQLException {
-        try (Connection c = conectar(); PreparedStatement ps = c.prepareStatement(sql)) {
+        try (Connection c = conectar()) { return query(c, sql, params); }
+    }
+
+    public static List<Map<String, Object>> query(Connection c, String sql, Object... params) throws SQLException {
+        try (PreparedStatement ps = c.prepareStatement(sql)) {
             bind(ps, params);
             try (ResultSet rs = ps.executeQuery()) {
                 ResultSetMetaData md = rs.getMetaData();
@@ -27,6 +31,11 @@ public final class Database {
 
     public static Map<String, Object> queryUm(String sql, Object... params) throws SQLException {
         List<Map<String, Object>> l = query(sql, params);
+        return l.isEmpty() ? null : l.get(0);
+    }
+
+    public static Map<String, Object> queryUm(Connection c, String sql, Object... params) throws SQLException {
+        List<Map<String, Object>> l = query(c, sql, params);
         return l.isEmpty() ? null : l.get(0);
     }
 

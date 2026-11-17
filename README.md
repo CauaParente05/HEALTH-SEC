@@ -42,7 +42,7 @@ HEALTH-SEC/
         ├── app.js                  troca de abas
         ├── charts.js               gráficos SVG
         ├── consultas.js            aba Consultas: seletor, SQL e tabela de resultado
-        └── dashboard.js, pacientes.js, estoque.js, lotes.js, profissionais.js   uma aba cada
+        └── dashboard.js, pacientes.js, estoque.js, lotes.js, profissionais.js, rotinas.js   uma aba cada
 ```
 
 ---
@@ -55,7 +55,7 @@ senhas ficam só na sua máquina.
 | Igual para todos (versionado) | Individual (nunca vai para o Git) |
 |---|---|
 | Banco `bd_vacinas_ubs` · `utf8mb4` / `utf8mb4_0900_ai_ci` | senha do `root` |
-| Usuário `ubs_vacinas_app@localhost` (só SELECT/INSERT/UPDATE/DELETE) | senha do `ubs_vacinas_app` |
+| Usuário `ubs_vacinas_app@localhost` (só SELECT/INSERT/UPDATE/DELETE/EXECUTE) | senha do `ubs_vacinas_app` |
 | MySQL 8.0.16+ na porta 3306, escutando só em `127.0.0.1` | `config/app.properties` |
 | Scripts em `db/` (fonte única da estrutura e dos dados) | `db/00_usuario_app.sql` |
 | Versão do driver: Connector/J 9.7.0 | o arquivo `.jar` |
@@ -118,7 +118,10 @@ Se o serviço não subir: `Copy-Item "...\my.ini.bak" "...\my.ini" -Force` e `St
    cmd /c "mysql -u root -p --default-character-set=utf8mb4 < db\00_usuario_app.sql"
    ```
 
-**Verificar:** a saída termina com `GRANT SELECT, INSERT, UPDATE, DELETE ON bd_vacinas_ubs.* TO ubs_vacinas_app@localhost`.
+**Verificar:** a saída termina com `GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE ON bd_vacinas_ubs.* TO ubs_vacinas_app@localhost`.
+
+> `EXECUTE` é necessário para a aba **Rotinas do banco** chamar as funções e os procedimentos.
+> Se o seu `00_usuario_app.sql` é anterior a isso, acrescente `EXECUTE` na linha do `GRANT` e rode-o de novo.
 
 > O nome do usuário diferencia maiúsculas: sempre `ubs_vacinas_app`.
 > Esqueceu a senha do `ubs_vacinas_app`? Rode este script de novo com uma senha nova: ele redefine.
@@ -288,6 +291,16 @@ Regras rápidas:
 | POST | `/api/profissionais` | cadastra profissional (só o campo do subtipo do cargo é gravado) |
 | PUT | `/api/profissionais/{id}` | altera (supervisor de si mesmo é barrado pelo trigger `trg_profissional_bu`) |
 | DELETE | `/api/profissionais/{id}` | exclui se não tiver dose aplicada; supervisionados ficam sem supervisor |
+| GET | `/api/rotinas/fn-situacao-dose?status=&data_prevista=` | `{situacao}` calculada por `fn_situacao_dose` |
+| GET | `/api/rotinas/fn-situacao-dose/registradas?cnes=` | doses registradas agrupadas por `fn_situacao_dose`: `[{situacao, doses, percentual}]` |
+| GET | `/api/rotinas/fn-saldo-aplicavel?cnes=` | por vacina: `fn_saldo_aplicavel` (lotes válidos) e saldo total da UBS |
+| GET | `/api/rotinas/doses-aplicaveis?cnes=` | doses pendentes de pacientes da UBS com saldo aplicável (até 200) |
+| GET | `/api/rotinas/lotes-aplicaveis?cnes=&codigo_vacina=` | lotes válidos com saldo na UBS |
+| POST | `/api/rotinas/pr-registrar-aplicacao-dose` | `CALL pr_registrar_aplicacao_dose` em transação: `{antes, depois, log}` |
+| POST | `/api/rotinas/cancelar-dose` | cancela dose pendente (dispara `trg_auditoria_status_dose`): `{antes, depois, log}` |
+| POST | `/api/rotinas/pr-baixa-estoque-fifo` | `CALL pr_baixa_estoque_fifo`: `{solicitado, baixado, nao_atendido, lotes: [{antes, baixado, depois}]}` |
+| GET | `/api/rotinas/log-status-dose?cns=` | últimas 100 linhas de `Log_Status_Dose` |
+| POST | `/api/rotinas/testar-lote-vencido` | tenta inserir lote e sempre faz ROLLBACK: `{bloqueado, mensagem}` do `trg_bloqueia_lote_vencido_entrada` |
 
 Nas rotas de estatística, `cnes` é opcional (vazio = todas as UBS) e filtra pela UBS de referência do paciente.
 
