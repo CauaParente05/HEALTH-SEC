@@ -1,17 +1,65 @@
 # HEALTH-SEC · Sala de Vacina (UBS)
 
-MVP de dashboard de vacinação sobre o banco **`bd_vacinas_ubs`**.
+Aplicação de gestão da sala de vacina de UBS, integrada ao banco **`bd_vacinas_ubs`**: CRUD, funções,
+procedimentos e triggers, consultas e views, e um dashboard estatístico. **Todos os números vêm do banco.**
 
 | Camada | Tecnologia |
 |---|---|
-| Banco | MySQL **8.0.16+** (MariaDB/XAMPP **não** serve: o projeto depende de CHECK e triggers do MySQL 8) |
-| Backend | Java **21** puro, servidor HTTP do JDK (`com.sun.net.httpserver`), JDBC puro, sem frameworks |
+| Banco | MySQL **8.0.16+**, testado também no **26.7** (MariaDB/XAMPP **não** serve: o projeto depende de CHECK e triggers do MySQL) |
+| Backend | Java **21+** puro, servidor HTTP do JDK (`com.sun.net.httpserver`), JDBC puro, sem frameworks |
 | Frontend | HTML + CSS + JavaScript vanilla, gráficos SVG desenhados à mão |
 | Dependência externa | apenas o driver MySQL Connector/J **9.7.0** (`lib/`) |
 
+- **O que a aplicação faz, aba por aba:** [próxima seção](#o-que-a-aplicação-entrega).
 - **Preparar o ambiente (primeira vez):** passos 1 a 6 abaixo.
 - **Compilar e rodar:** [passo 7](#passo-7--compilar-e-rodar).
 - **Como o código está organizado e como acrescentar uma rota:** [seção própria](#como-o-código-está-organizado).
+
+## O que a aplicação entrega
+
+| Aba | O que faz | Requisito da entrega |
+|---|---|---|
+| **Dashboard** | 8 indicadores e 8 gráficos com filtros de UBS, período, vacina e sexo (detalhes abaixo) | Dashboard estatístico integrado |
+| **Consultas** | as 14 consultas (Etapa 03) e as 2 views (Etapa 04), cada uma com indicadores, 1 ou 2 gráficos, filtros na tela (busca e por coluna) e tabela ordenável; parâmetros enviados ao banco (paciente, lote; nas views: UBS, vacina, situação, validade) | Consultas e views |
+| **Pacientes** | CRUD de `Paciente` (grava junto `Prontuario` e `Paciente_Telefone`) | CRUD (1/4) |
+| **Estoque** | CRUD de `Estoque_UBS` (entrada, ajuste, remoção), com checagem da quantidade total do lote | CRUD (2/4) |
+| **Lotes** | CRUD de `Lote`, com situação da validade, total em estoque e doses aplicadas | CRUD (3/4) |
+| **Profissionais** | CRUD de `Profissional` (especialização disjunta: só o campo do cargo é gravado) | CRUD (4/4) |
+| **Rotinas do banco** | executa e mostra o efeito de cada objeto da Etapa 05 (tabela abaixo) | Funções, procedimentos e triggers |
+
+**Etapa 05 na interface** (aba Rotinas do banco, salvo indicação):
+
+| Objeto | Como aparece |
+|---|---|
+| `fn_situacao_dose` | execução avulsa (status + data) e aplicada a todas as doses, com gráfico; também usada no dashboard (situação, atrasadas, dias de atraso) |
+| `fn_saldo_aplicavel` | saldo aplicável × saldo total por vacina na UBS, com indicadores e gráfico; também filtra as doses que podem ser aplicadas |
+| `pr_registrar_aplicacao_dose` | aplica uma dose pendente e mostra **antes/depois** da dose e do estoque do lote. Roda em transação: se a baixa do estoque falhar, a aplicação também é desfeita |
+| `pr_baixa_estoque_fifo` (cursor) | baixa uma quantidade e mostra, lote a lote, antes/baixado/depois, com gráfico |
+| `trg_auditoria_status_dose` | tabela do `Log_Status_Dose`; aplicar ou cancelar uma dose mostra a linha que o trigger gravou |
+| `trg_bloqueia_lote_vencido_entrada` | botão de teste (INSERT real com ROLLBACK) e no cadastro da aba Lotes |
+| `trg_profissional_bu`, CHECKs e FKs | aparecem como mensagens de erro em português nos CRUDs (ex.: supervisor de si mesmo, excluir lote em uso) |
+
+**Dashboard**:
+
+- **Indicadores:** pacientes cadastrados, doses aplicadas no período (com variação % em relação ao período
+  anterior de mesmo tamanho), média mensal, % de doses em dia, doses atrasadas, estoque válido, estoque vencido
+  (% do total) e vacina mais aplicada.
+- **Gráficos:**
+
+  | # | Gráfico | Conceito de Estatística |
+  |---|---|---|
+  | 1 | Linha: doses por mês + reta de mínimos quadrados | tendência temporal |
+  | 2 | Pizza (rosca): situação das doses | frequência absoluta e relativa |
+  | 3 | Barras: vacinas mais aplicadas | distribuição de frequência, moda |
+  | 4 | Barras agrupadas: faixa etária × sexo | comparativo de frequências |
+  | 5 | Histograma: idade dos pacientes | média, mediana, moda, variância, desvio padrão, coef. de variação |
+  | 6 | Histograma: dias de atraso | as mesmas medidas, mais assimetria (média × mediana) |
+  | 7 | Radar: doses por dia da semana | distribuição em variável cíclica |
+  | 8 | Dispersão: pacientes × doses por UBS | correlação de Pearson (r, r²) e reta de regressão |
+
+- Média, mediana, moda, variância, desvio padrão e Pearson são **calculados no SQL** (`VAR_SAMP`, `STDDEV_SAMP`,
+  funções de janela, CTE). A reta de tendência mensal é calculada no front, sobre a série que o banco devolve.
+- Cada gráfico informa a quais filtros responde e tem uma tabela "Ver dados".
 
 ## Estrutura atual
 
@@ -19,10 +67,14 @@ MVP de dashboard de vacinação sobre o banco **`bd_vacinas_ubs`**.
 HEALTH-SEC/
 ├── config/app.properties.example   modelo de configuração (copie para app.properties)
 ├── db/00_usuario_app.sql.example   cria o usuário da aplicação (copie e ponha sua senha)
-├── db/criacao_tabelas.sql          script 1: banco, 12 tabelas, 7 triggers
-├── db/insercao_tabelas.sql         script 2: dados de teste (reexecutável)
-├── db/consultas.sql                as 14 consultas (mesmo SQL do ConsultaDao)
-├── docs/DESENVOLVIMENTO.md         fluxo de trabalho em equipe (branches, PR, mudanças no banco)
+├── db/criacao_tabelas.sql          Etapa 02: banco, 12 tabelas, 7 triggers de integridade
+├── db/insercao_tabelas.sql         Etapa 02: dados de teste (reexecutável)
+├── db/consultas.sql                Etapa 03: as 14 consultas (mesmo SQL do ConsultaDao)
+├── db/indices.sql                  Etapa 04: índices para as consultas e o dashboard
+├── db/views.sql                    Etapa 04: vw_carteira_vacinacao e vw_posicao_estoque
+├── db/funcoes.sql                  Etapa 05: fn_situacao_dose e fn_saldo_aplicavel
+├── db/procedimentos.sql            Etapa 05: pr_registrar_aplicacao_dose e pr_baixa_estoque_fifo (cursor)
+├── db/triggers.sql                 Etapa 05: Log_Status_Dose + 2 triggers (auditoria e lote vencido)
 ├── lib/                            driver JDBC (local, não versionado; crie a pasta, veja o passo 6)
 ├── scripts/                        build.bat (compila) e run.bat (sobe o servidor)
 ├── src/br/cesar/vacinas/
@@ -33,17 +85,23 @@ HEALTH-SEC/
 │   ├── http/                       Router, Request, Json, StaticFiles, HttpError
 │   ├── api/Routes.java             todos os endpoints: MÉTODO + caminho -> método do DAO
 │   └── dao/                        *** todo o SQL da aplicação *** (um DAO por funcionalidade)
+│       ├── DashboardDao.java       indicadores e estatísticas do dashboard (filtros comuns em Filtro)
 │       ├── ConsultaDao.java        as 14 consultas (aba Consultas)
-│       └── ViewDao.java            as views da Etapa 04, com filtros (aba Consultas)
+│       ├── ViewDao.java            as views da Etapa 04, com filtros (aba Consultas)
+│       ├── RotinaDao.java          funções, procedimentos e triggers da Etapa 05 (aba Rotinas do banco)
+│       ├── PacienteDao, EstoqueDao, LoteDao, ProfissionalDao   os 4 CRUDs
+│       └── CatalogoDao.java        listas para selects (pacientes, vacinas)
 └── web/                            front servido pelo próprio Java em http://localhost:8080
     ├── index.html                  página única, uma <section> por aba
     ├── css/style.css
     └── js/
         ├── api.js                  fetch, tratamento de erros e utilitários de tela (ui)
         ├── app.js                  troca de abas
-        ├── charts.js               gráficos SVG
+        ├── charts.js               gráficos SVG: barras, barras agrupadas, linha, histograma, pizza, radar, dispersão
+        ├── dashboard.js            aba Dashboard: filtros, indicadores e os 8 gráficos
         ├── consultas.js            aba Consultas: consultas e views, com parâmetros, indicadores, gráficos e filtros (VISUAL)
-        └── dashboard.js, pacientes.js, estoque.js, lotes.js, profissionais.js, rotinas.js   uma aba cada
+        ├── rotinas.js              aba Rotinas do banco
+        └── pacientes.js, estoque.js, lotes.js, profissionais.js   os 4 CRUDs, uma aba cada
 ```
 
 ---
@@ -65,8 +123,14 @@ senhas ficam só na sua máquina.
 
 | Item | Conferir no PowerShell |
 |---|---|
-| MySQL Server 8.0.16+ (serviço `MySQL80`) | `mysql --version` → `MySQL Community Server`, **não** `MariaDB` |
-| JDK 21 | `javac -version` → `21.x` |
+| MySQL Server 8.0.16+ (serviço `MySQL80`; em versões novas o nome muda, ex. `MySQL267` no 26.7) | `mysql --version` → `MySQL Community Server`, **não** `MariaDB` |
+| JDK 21 ou mais novo | `javac -version` → `21.x` ou maior |
+
+> **`mysql` não reconhecido?** O instalador nem sempre põe o cliente no PATH. Para a sessão atual do terminal
+> (ajuste a pasta para a sua versão):
+> `$env:Path += ";C:\Program Files\MySQL\MySQL Server 8.0\bin"`
+>
+> Nos passos abaixo, onde aparece `MySQL80` use o nome do **seu** serviço (o primeiro comando do passo 1 mostra).
 | Git | `git --version` |
 | VSCode + *Extension Pack for Java* | — |
 | DBeaver (opcional, só para visualizar o banco) | — |
@@ -116,7 +180,7 @@ Se o serviço não subir: `Copy-Item "...\my.ini.bak" "...\my.ini" -Force` e `St
 2. `notepad db\00_usuario_app.sql` → troque as **duas** ocorrências de `<SENHA>` e salve.
 3. Rode como root:
    ```powershell
-   cmd /c "mysql -u root -p --default-character-set=utf8mb4 < db\00_usuario_app.sql"
+   cmd /c "mysql -u root -p --default-character-set=utf8mb4 --skip-comments < db\00_usuario_app.sql"
    ```
 
 **Verificar:** a saída termina com `GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE ON bd_vacinas_ubs.* TO ubs_vacinas_app@localhost`.
@@ -127,28 +191,50 @@ Se o serviço não subir: `Copy-Item "...\my.ini.bak" "...\my.ini" -Force` e `St
 > O nome do usuário diferencia maiúsculas: sempre `ubs_vacinas_app`.
 > Esqueceu a senha do `ubs_vacinas_app`? Rode este script de novo com uma senha nova: ele redefine.
 
-### Passo 4 · Criar as tabelas e carregar os dados
+### Passo 4 · Criar as tabelas, carregar os dados e criar os objetos do banco
 
-O PowerShell **não** aceita `<` como redirecionamento; por isso o `cmd /c`:
+O PowerShell **não** aceita `<` como redirecionamento; por isso o `cmd /c`. Rode **todos, nesta ordem**
+(cada um pede a senha do root):
 
 ```powershell
-cmd /c "mysql -u root -p --default-character-set=utf8mb4 < db\criacao_tabelas.sql"
-cmd /c "mysql -u root -p --default-character-set=utf8mb4 < db\insercao_tabelas.sql"
+cmd /c "mysql -u root -p --default-character-set=utf8mb4 --skip-comments < db\criacao_tabelas.sql"
+cmd /c "mysql -u root -p --default-character-set=utf8mb4 --skip-comments < db\insercao_tabelas.sql"
+cmd /c "mysql -u root -p --default-character-set=utf8mb4 --skip-comments < db\indices.sql"
+cmd /c "mysql -u root -p --default-character-set=utf8mb4 --skip-comments < db\views.sql"
+cmd /c "mysql -u root -p --default-character-set=utf8mb4 --skip-comments < db\funcoes.sql"
+cmd /c "mysql -u root -p --default-character-set=utf8mb4 --skip-comments < db\procedimentos.sql"
+cmd /c "mysql -u root -p --default-character-set=utf8mb4 --skip-comments < db\triggers.sql"
 ```
 
-O segundo imprime várias tabelas (contagens e demonstrações que terminam em `ROLLBACK`): é normal.
+Vários scripts imprimem tabelas de conferência (contagens, testes, demonstrações que terminam em `ROLLBACK`): é normal.
 
-> Rode os scripts **pelo terminal**, não pelo DBeaver: a seção de triggers usa `DELIMITER`, comando do cliente `mysql`.
+Por que a ordem importa:
+
+| Script | Precisa vir depois de | Motivo |
+|---|---|---|
+| `insercao_tabelas.sql` | `criacao_tabelas.sql` | as tabelas precisam existir |
+| `funcoes.sql` | `views.sql` | as consultas de conferência no fim do script usam `vw_carteira_vacinacao` |
+| `triggers.sql` | `insercao_tabelas.sql` | o trigger de lote vencido recusaria os lotes vencidos dos dados de teste |
+
+> **Por que `--skip-comments`:** em versões novas do cliente `mysql` (confirmado no 26.7: `mysql --help` mostra
+> `comments TRUE`), os comentários vão ao servidor por padrão. Um comentário logo antes de `DELIMITER $$` faz o cliente não reconhecer o comando, e o script
+> para com `ERROR 1064 ... near 'DELIMITER $$'`. A opção devolve o comportamento do 8.0 e não muda nada nele.
+
+> Rode os scripts **pelo terminal**, não pelo DBeaver: vários usam `DELIMITER`, comando do cliente `mysql`.
 > Os scripts são **reexecutáveis**: rode de novo sempre que alguém mudar algo em `db/`
 > (o `criacao_tabelas.sql` também recria o banco, se ele tiver sido apagado).
+> **Rodou de novo o `criacao_tabelas.sql`? Rode também todos os seguintes**: recriar as tabelas apaga os triggers
+> delas, inclusive os do `triggers.sql`. A tabela `Log_Status_Dose` não é apagada, então o histórico de auditoria continua.
 
 **Verificar** (login como a aplicação, senha do passo 3):
 
 ```powershell
-mysql -h 127.0.0.1 -u ubs_vacinas_app -p bd_vacinas_ubs -e "SELECT CURRENT_USER(), (SELECT COUNT(*) FROM UBS) ubs, (SELECT COUNT(*) FROM Registro_Dose) doses;"
+mysql -h 127.0.0.1 -u ubs_vacinas_app -p bd_vacinas_ubs -e "SELECT CURRENT_USER(), (SELECT COUNT(*) FROM UBS) ubs, (SELECT COUNT(*) FROM Registro_Dose) doses, fn_situacao_dose('PENDENTE', '2020-01-01') funcao;"
 ```
 
-Esperado: `ubs_vacinas_app@localhost`, `31` UBS e `657` doses. Como root, `SHOW TRIGGERS FROM bd_vacinas_ubs;` lista **7** triggers.
+Esperado: `ubs_vacinas_app@localhost`, `31` UBS, `657` doses e `ATRASADA` (prova que as funções existem e que o
+usuário tem `EXECUTE`). Como root, `SHOW TRIGGERS FROM bd_vacinas_ubs;` lista **9** triggers
+(7 do `criacao_tabelas.sql` + 2 do `triggers.sql`).
 
 ### Passo 5 · Acentos e charset
 
@@ -324,13 +410,18 @@ Cada rota nova entra nesta tabela no mesmo PR.
 
 | Sintoma | Causa provável / solução |
 |---|---|
-| `Access denied for user 'ubs_vacinas_app'` | senha errada ou nome com maiúscula. Esqueceu? Rode o passo 3 de novo com senha nova |
+| `ERROR 1064 ... near 'DELIMITER $$'` ao rodar um script | cliente `mysql` novo enviando comentários: acrescente `--skip-comments` (passo 4) |
+| `mysql` não é reconhecido como comando | cliente fora do PATH: veja a nota dos pré-requisitos |
+| `Access denied for user 'ubs_vacinas_app'` | senha errada, nome com maiúscula ou `<SENHA>` não trocada no `00_usuario_app.sql` (aí a senha ficou literalmente `<SENHA>`). Corrija o arquivo e rode o passo 3 de novo |
+| `execute command denied to user 'ubs_vacinas_app'` na aba Rotinas ou no dashboard | falta `EXECUTE` no `GRANT`: veja a nota do passo 3 |
+| `FUNCTION bd_vacinas_ubs.fn_situacao_dose does not exist` ou `Table 'Log_Status_Dose' doesn't exist` | faltou rodar `funcoes.sql` / `procedimentos.sql` / `triggers.sql` (passo 4) |
+| Cadastrar lote vencido funciona (deveria ser bloqueado) | o `criacao_tabelas.sql` foi rodado de novo depois do `triggers.sql`: rode o `triggers.sql` outra vez |
 | `Access denied for user 'root'` | senha do root errada (se o DBeaver conecta como root, ela está salva nele: *Editar Conexão*) |
 | `Unknown database 'bd_vacinas_ubs'` | banco não criado ou apagado: rode o passo 4 |
 | `Public Key Retrieval is not allowed` | falta `allowPublicKeyRetrieval=true` na `db.url` |
-| `Communications link failure` / `Can't connect` | serviço `MySQL80` parado; use sempre `127.0.0.1` (não `localhost`) |
+| `Communications link failure` / `Can't connect` | serviço do MySQL parado (passo 1); use sempre `127.0.0.1` (não `localhost`) |
 | `No suitable driver found for jdbc:mysql` | falta o `.jar` em `lib\` ou o classpath não inclui `lib/*` |
-| Números do dashboard diferentes entre devs | as consultas usam `CURDATE()`; os dados de teste têm referência 20/09/2026 |
+| Números do dashboard diferentes entre devs | as consultas usam `CURDATE()`; os dados de teste têm referência 20/09/2026. Testar a aba Rotinas também muda os dados (aplica, cancela e baixa doses); para voltar ao original, rode o passo 4 de novo |
 | `NoSuchFileException: config\app.properties` ou página 404 em `/` | servidor iniciado fora da raiz do projeto: `cd` para a pasta HEALTH-SEC e rode de novo |
 | `Address already in use` | a porta 8080 já está em uso (outro servidor aberto): feche-o ou mude `server.port` no **seu** `app.properties` |
 | `cannot find symbol: Map` ao compilar | falta `import java.util.Map;` no topo do arquivo (o VSCode pode apagá-lo em "Organize Imports") |
