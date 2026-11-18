@@ -108,8 +108,10 @@ const profissionais = {
         <td>${ui.esc(detalhe(p))}</td>
         <td>${ui.esc(p.doses_aplicadas)}</td>
         <td>
-          <button class="secundario" data-editar="${ui.esc(p.id_profissional)}">Alterar</button>
-          <button class="perigo" data-excluir="${ui.esc(p.id_profissional)}">Excluir</button>
+          <div class="botoes-acao">
+            <button class="secundario" data-editar="${ui.esc(p.id_profissional)}">Alterar</button>
+            <button class="perigo" data-excluir="${ui.esc(p.id_profissional)}">Excluir</button>
+          </div>
         </td>
       </tr>`).join('')}</tbody>
     </table>`;
@@ -143,16 +145,18 @@ const profissionais = {
     this.mostrarSubtipo();
     document.getElementById('salvar-profissional').textContent = 'Salvar';
     document.getElementById('cancelar-profissional').hidden = false;
+    modal.abrir('form-profissional', 'Editar Profissional');
   },
 
   async excluir(id) {
-    if (!confirm('Deseja excluir este profissional?')) return;
+    if (!(await modal.confirmar('Deseja excluir este profissional?'))) return;
     const resposta = await api.delete('/api/profissionais/' + id);
     ui.toast(resposta.mensagem);
     await this.carregar();
   },
 
   limpar() {
+    modal.fechar();
     this.editando = null;
     document.getElementById('form-profissional').reset();
     this.mostrarSubtipo();

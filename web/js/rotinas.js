@@ -120,7 +120,7 @@ const rotinas = {
     $('btn-cancelar-dose').addEventListener('click', () => rotinas.cancelar().catch(console.error));
 
     enviar('form-pr-fifo', async d => {
-      if (!confirm(`Dar baixa de ${d.quantidade} dose(s) no estoque? A alteração é gravada no banco.`)) return;
+      if (!(await modal.confirmar(`Dar baixa de ${d.quantidade} dose(s) no estoque? A alteração é gravada no banco.`))) return;
       const r = await api.post('/api/rotinas/pr-baixa-estoque-fifo', d);
       $('res-pr-fifo').innerHTML = rotinas.mostrarFifo(r);
     });
@@ -220,7 +220,7 @@ const rotinas = {
 
   async cancelar() {
     const d = rotinas.doseEscolhida();
-    if (!d || !confirm(`Cancelar a dose ${d.numero_dose} de ${d.vacina} de ${d.paciente}?`)) return;
+    if (!d || !(await modal.confirmar(`Cancelar a dose ${d.numero_dose} de ${d.vacina} de ${d.paciente}?`))) return;
     const r = await api.post('/api/rotinas/cancelar-dose', { cns: d.cns, codigo_vacina: d.codigo_vacina, numero_dose: d.numero_dose });
     rotinas.mostrarAntesDepois(r, `${d.paciente} · ${d.vacina} dose ${d.numero_dose}`);
     ui.toast('Dose cancelada');

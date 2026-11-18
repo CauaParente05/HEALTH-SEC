@@ -107,16 +107,18 @@ const pacientes = {
     form.elements.cns.readOnly = true;
     document.getElementById('salvar-paciente').textContent = 'Salvar';
     document.getElementById('cancelar-paciente').hidden = false;
+    modal.abrir('form-paciente', 'Editar Paciente');
   },
 
   async excluir(cns) {
-    if (!confirm('Deseja excluir este paciente?')) return;
+    if (!(await modal.confirmar('Deseja excluir este paciente?'))) return;
     const resposta = await api.delete('/api/pacientes/' + cns);
     ui.toast(resposta.mensagem);
     await this.carregar();
   },
 
   limpar() {
+    modal.fechar();
     this.editando = null;
     const form = document.getElementById('form-paciente');
     form.reset();

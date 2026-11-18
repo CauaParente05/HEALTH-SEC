@@ -37,6 +37,18 @@ const estoque = {
         </label>
       </form>
 
+      <div hidden>
+        <form id="form-ajuste-estoque">
+          <input type="hidden" name="cnes">
+          <input type="hidden" name="id_lote">
+          <label>Nova quantidade disponível:
+            <input name="quantidade" type="number" min="0" required>
+          </label>
+          <button type="submit">Salvar</button>
+          <button type="button" id="cancelar-ajuste" class="secundario">Cancelar</button>
+        </form>
+      </div>
+
       <div id="lista-estoque"></div>`;
 
     document.getElementById('form-entrada-estoque').addEventListener('submit', e => this.entrada(e));
@@ -44,6 +56,8 @@ const estoque = {
       this.filtroCnes = e.target.value;
       this.listar();
     });
+    document.getElementById('form-ajuste-estoque').addEventListener('submit', e => this.salvarAjuste(e));
+    document.getElementById('cancelar-ajuste').addEventListener('click', () => modal.fechar());
 
     await this.listar();
   },
@@ -71,8 +85,10 @@ const estoque = {
         <td>${ui.esc(e.quantidade_disponivel)}</td>
         <td>${ui.esc(e.data_atualizacao)}</td>
         <td>
-          <button class="secundario" data-ajustar="${ui.esc(e.id_lote)}" data-cnes="${ui.esc(e.cnes)}" data-qtd="${ui.esc(e.quantidade_disponivel)}">Ajustar</button>
-          <button class="perigo" data-remover="${ui.esc(e.id_lote)}" data-cnes="${ui.esc(e.cnes)}">Remover</button>
+          <div class="botoes-acao">
+            <button class="secundario" data-ajustar="${ui.esc(e.id_lote)}" data-cnes="${ui.esc(e.cnes)}" data-qtd="${ui.esc(e.quantidade_disponivel)}">Ajustar</button>
+            <button class="perigo" data-remover="${ui.esc(e.id_lote)}" data-cnes="${ui.esc(e.cnes)}">Remover</button>
+          </div>
         </td>
       </tr>`).join('')}</tbody>
     </table>`;
@@ -90,21 +106,34 @@ const estoque = {
     await this.listar();
   },
 
-  async ajustar(botao) {
-    const valor = prompt('Nova quantidade disponível:', botao.dataset.qtd);
-    if (valor === null) return;
-    if (!/^\d+$/.test(valor)) {
+  ajustar(botao) {
+    const form = document.getElementById('form-ajuste-estoque');
+    
+    form.elements.cnes.value = botao.dataset.cnes;
+    form.elements.id_lote.value = botao.dataset.ajustar;
+    form.elements.quantidade.value = botao.dataset.qtd;
+    
+    modal.abrir('form-ajuste-estoque', 'Ajustar quantidade em estoque');
+  },
+
+  async salvarAjuste(evento) {
+    evento.preventDefault();
+    const dados = ui.lerForm(evento.currentTarget);
+    
+    if (!/^\d+$/.test(dados.quantidade)) {
       ui.toast('Informe uma quantidade inteira maior ou igual a zero', true);
       return;
     }
 
-    const resposta = await api.put(`/api/estoque/${botao.dataset.cnes}/${botao.dataset.ajustar}`, { quantidade: valor });
+    const resposta = await api.put(`/api/estoque/${dados.cnes}/${dados.id_lote}`, { quantidade: dados.quantidade });
     ui.toast(resposta.mensagem);
+    
+    modal.fechar();
     await this.listar();
   },
 
   async remover(botao) {
-    if (!confirm('Deseja remover este lote do estoque da UBS?')) return;
+    if (!(await modal.confirmar('Deseja remover este lote do estoque da UBS?'))) return;
     const resposta = await api.delete(`/api/estoque/${botao.dataset.cnes}/${botao.dataset.remover}`);
     ui.toast(resposta.mensagem);
     await this.listar();

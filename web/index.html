@@ -28,6 +28,25 @@
     <section id="aba-profissionais" class="aba"></section>
     <section id="aba-rotinas" class="aba"></section>
   </main>
+  <div hidden>
+    <form id="form-excluir" style="display: flex; flex-direction: column; align-items: stretch; gap: 16px; margin: 0;">
+      <p id="msg-excluir" style="margin: 0; font-size: 16px; color: #1c2430;"></p>
+      <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 12px;">
+        <button type="button" id="cancelar-excluir" class="secundario">Cancelar</button>
+        <button type="submit" class="perigo">Sim, confirmar</button>
+      </div>
+    </form>
+  </div>
+  <div id="modal-fundo" class="modal-oculto">
+    <div id="modal-caixa">
+      <div class="modal-cabecalho">
+        <h2 id="modal-titulo">Editar</h2>
+        <button type="button" id="modal-fechar">&times;</button>
+      </div>
+      <div id="modal-conteudo">
+      </div>
+    </div>
+  </div>
   <div id="toast"></div>
 
   <script src="js/api.js"></script>

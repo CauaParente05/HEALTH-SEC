@@ -108,16 +108,18 @@ const lotes = {
     form.elements.codigo_vacina.disabled = true;
     document.getElementById('salvar-lote').textContent = 'Salvar';
     document.getElementById('cancelar-lote').hidden = false;
+    modal.abrir('form-lote', 'Editar Lote');
   },
 
   async excluir(id) {
-    if (!confirm('Deseja excluir este lote?')) return;
+    if (!(await modal.confirmar('Deseja excluir este lote?'))) return;
     const resposta = await api.delete('/api/lotes/' + id);
     ui.toast(resposta.mensagem);
     await this.listar();
   },
 
   limpar() {
+    modal.fechar();
     this.editando = null;
     const form = document.getElementById('form-lote');
     form.reset();
